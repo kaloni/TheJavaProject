@@ -50,7 +50,7 @@ public class Matrix<E> {
 		E operation(E a, E b);
 	}
 	
-	// PUBLIC STATICS
+	// PUBLIC STATICS : OPERATIONS
 	public static BinaryOperation<Boolean> boolOr = (a,b) -> a || b;
 	public static BinaryOperation<Boolean> boolAnd = (a,b) -> a && b;
 	public static BinaryOperation<Integer> intAdd = (a,b) -> a + b;
@@ -93,6 +93,9 @@ public class Matrix<E> {
 				row[c] = get(r,c);
 			}
 		}
+		else {
+			System.out.println("Row index out of bounds");
+		}
 		return row;
 	}
 
@@ -103,7 +106,50 @@ public class Matrix<E> {
 				col[r] = get(r,c);
 			}
 		}
+		else {
+			System.out.println("Column index out of bounds");
+		}
 		return col;
+	}
+	
+	public E getRowSum(int row, BinaryOperation<E> opAdd) {
+		
+		// init for !null
+		E accum;
+		
+		if( row < rows && row >= 0) {
+			accum = getRow(row)[0];
+			for(int c = 1; c < cols; c++) {
+				accum = binaryOp( accum, get(row,c), opAdd);
+			}
+			return accum;
+		}
+		else {
+			System.out.println("Row index out of bounds");
+		}
+		
+		return (E) new Object();
+		
+	}
+	
+	public E getColSum(int col, BinaryOperation<E> opAdd) {
+		
+		// init for !null
+		E accum;
+		
+		if( col < cols && col >= 0) {
+			accum = getCol(col)[0];
+			for(int r = 1; r < rows; r++) {
+				accum = binaryOp( accum, get(r,col), opAdd);
+			}
+			return accum;
+		}
+		else {
+			System.out.println("Column index out of bounds");
+		}
+		
+		return (E) new Object();
+		
 	}
 	
 	public void setRow(int r, E[] newRow) {
@@ -229,6 +275,83 @@ public class Matrix<E> {
 		}
 		
 		setInnerMatrix( tempMatrix.cloneInnerMatrix() );
+	}
+	
+	// methods that realizes the rotation of a building block
+	// maps (r,c) --> (r + 1 % 4, c + 1 & 4)
+	public void shift() {
+		
+		Matrix<E> tempMatrix = clone();
+		
+		for(int r = 0; r < rows; r++) {
+			for(int c = 0; c < cols; c++) {
+				set(r, c, tempMatrix.get(Direction.dirBend(r,-1), Direction.dirBend(c,-1)));
+			}
+		}
+	}
+	
+	// exchange realized the flip of a matrix around an axis
+	// maps if(axis == EAST||WEST) : (EW,NS) --> (EW,SN) && (NS,EW) --> (SN,EW)
+	// else : (EW,NS) --> (WE,NS) && (NS,EW) --> (NS, WE)
+	// Very messy code, did not find any other way to do this...
+	public void exchange(int axis) {
+		
+		Matrix<E> tempMatrix = clone();
+		
+		if( axis == Direction.EAST || axis == Direction.WEST ) {
+		
+			for(int r = 0; r < rows; r++) {
+				for(int c = 0; c < cols; c++) {
+					
+					if( r != c ) {
+					
+						if( r == Direction.NORTH || r == Direction.SOUTH ) {
+							if( r == Direction.antiDir(c) ) {
+								set(r, c, tempMatrix.get(c, r));
+							}
+							else {
+								set(r, c, tempMatrix.get(Direction.antiDir(r), c));
+							}
+						}
+						else {
+							if( !(r == Direction.antiDir(c)) ) {
+								set(r, c, tempMatrix.get(r, Direction.antiDir(c)));
+							}
+							
+						}
+					}
+					
+				}
+			}
+			
+		}
+		else if( axis == Direction.NORTH || axis == Direction.SOUTH ) {
+				
+			for(int r = 0; r < rows; r++) {
+				for(int c = 0; c < cols; c++) {
+					
+					if( r != c ) {
+						
+						if( r == Direction.NORTH || r == Direction.SOUTH ) {
+							if( !(r == Direction.antiDir(c)) && r != c) {
+								set(r, c, tempMatrix.get(r, Direction.antiDir(c)));
+							}
+						}
+						else {
+							if( r == Direction.antiDir(c) ) {
+								set(r, c, tempMatrix.get(c, r));
+							}
+							else {
+								set(r, c, tempMatrix.get(Direction.antiDir(r), c));
+							}
+						}
+						
+					}
+						
+				}
+			}
+			
+		}
 	}
 	
 	

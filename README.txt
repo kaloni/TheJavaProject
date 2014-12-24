@@ -1,3 +1,33 @@
+////////// GUI extends PApplet //////////
+
+CONSTRUCTOR
++ GUI(int,int)
+
+METHODS
++ void drawBlock(PVector,BuildingBlock)
++ void  drawBackground(Pos)
++ void  setBlockObj(Pos,BlockObject)
++ PVector posToVec(Pos)
++ Pos vecToPos(PVector)
++ Pos XYtoPos(float,float)
++ void keyPressed()
++ void mousePressed
+
+
+
+////////// BlockMap<K,V> extends HashMap//////////
+
+CONSTRUCTOR
++ BlockMap(V)
+
+PUBLIC METHODS
++ K getKey(V)
++ V getValue(K)
++ Map.Entry<K,V> getEntry(V)
++ V getDummyValue
+
+
+
 //////////  BlockObject  //////////
 
 CONSTRUCTOR 
@@ -21,6 +51,7 @@ STATIC METHODS
 
 PUBLIC METHODS
 // getters //
++ int getDir()
 + Matrix<Boolean> getCurrentState()
 + Matrix<Boolean> getState(int)
 + Matrix<Boolean> getConnections()
@@ -29,6 +60,7 @@ PUBLIC METHODS
 + int maxState()
 
 // setters //
++ void setDir(int)
 + void setState(int stateNum)
 + void addState(Matrix<Boolean>)
 + void removeState(int)
@@ -50,6 +82,7 @@ CONSTRUCTOR
 
 PUBLIC METHODS
 // getters //
++ BuildingBlock getDummyBlock()
 + BuildingBlock getRoad(int,boolean)
 + BuildingBlock getCurve(int,int,boolean)
 + BuildingBlock getCrossing(int,int,boolean)
@@ -82,9 +115,11 @@ PUBLIC METHODS
 // getters //
 + int rows()
 + int cols()
-+ get(int,int)
-+ getRow(int)
-+ getCol(int)
++ E get(int,int)
++ E[] getRow(int)
++ E[] getCol(int)
++ E getRowSum(int,BinaryOperation)
++ E getColSum(int,BinaryOperation)
 + Matrix<E> clone()
 + Matrix<E> directOp(Matrix<E>,BinaryOperation)
 + Matrix<E> matrixMult(Matrix<E>,BinaryOperation,BinaryOperation)
@@ -96,7 +131,11 @@ PUBLIC METHODS
 + void rotate()
 + void flip()
 + void transpose()
++ void shift()
++ void exchange()
 
+// helpers //
++ toString()
 
 
 ////////// Direction (static access) //////////
@@ -110,7 +149,8 @@ STATIC METHODS
 + int antiDir(int)
 + int dirBend(int,int)
 + int getDirection(Pos)
-
++ Pos dirToPos
++ 
 
 
 ////////// Pos //////////
@@ -127,3 +167,7 @@ STATIC METHODS
 
 PUBLIC METHODS
 + Pos sub(Pos)
+
+// helpers //
++ int hashCode()
++ boolean equals()

@@ -8,28 +8,24 @@ import processing.core.PImage;
  * Factory Class for BuildingBlock. This is where we will get the different kinds of building blocks from
  */
 public class BuildingBlockFactory {
-
-	// TODO : have images?
-	private PImage[] images;
 	
 	public BuildingBlockFactory() {
 		
-		/* TODO
-		images[0] = loadImage(this.getClass().getResource("/res/'ImageName1'").getPath());
-		images[1] = loadImage(this.getClass().getResource("/res/'ImageName2'").getPath());
-		.
-		.
-		.
-		images[n] = loadImage(this.getClass().getResource("/res/'ImageNameNN'").getPath());
-		*/
-		
 	}
 	
+	public BuildingBlock getDummyBlock() {
+		
+		BuildingBlock dummyBlock = new BuildingBlock();
+		dummyBlock.addState(new Matrix<>(4,4,false));
+		
+		return dummyBlock;
+		
+	}
 	
 	// creates a new road type building block, with/without red lights
 	public BuildingBlock getRoad(int dir, boolean redLight) {
 		
-		BuildingBlock road = new BuildingBlock();
+		BuildingBlock road = new BuildingBlock(dir);
 		
 			Matrix<Boolean> stateMatrixRedLight = new Matrix<>(4,4,false);
 			Matrix<Boolean> stateMatrixGreenLight = new Matrix<>(4,4,false);
@@ -39,12 +35,7 @@ public class BuildingBlockFactory {
 				road.addState(stateMatrixRedLight);
 			}
 			road.addState(stateMatrixGreenLight);
-		
-		/* TODO
-			PImage roadImage = new PImage();
-			road.setImage(roadImage);
-		*/
-		
+			
 		return road;
 		
 	}
@@ -52,7 +43,7 @@ public class BuildingBlockFactory {
 	// create a curve ( left = -1, right = 1)
 	public BuildingBlock getCurve(int dir, int bend, boolean redLight) {
 		
-		BuildingBlock curve = new BuildingBlock();
+		BuildingBlock curve = new BuildingBlock(dir);
 		
 		Matrix<Boolean> stateMatrixRedLight = new Matrix<>(4,4,false);
 		Matrix<Boolean> stateMatrixGreenLight = new Matrix<>(4,4,false);
@@ -62,11 +53,6 @@ public class BuildingBlockFactory {
 			curve.addState(stateMatrixRedLight);
 		}
 		curve.addState(stateMatrixGreenLight);
-	
-	/* TODO
-		PImage curveImage = new PImage();
-		curve.setImage(curveImage);
-	*/
 	
 	return curve;
 		
@@ -89,17 +75,20 @@ public class BuildingBlockFactory {
 			crossing = blockFuse(road1,road2);
 		}
 		
+		crossing.setDir(dirX);
+		
 		return crossing;
 		
 	}
 
 	// Similar to crossing. exit = true makes the curve part an exit, exit = false makes the curve part an an input
-	public BuildingBlock getTCrossing(int dirRoad, int curveBend, boolean exit,  boolean redLight) {
+	// TCrossing is of "merge" type by default (fork = false)
+	public BuildingBlock getTCrossing(int dirRoad, int curveBend, boolean fork,  boolean redLight) {
 		
 		BuildingBlock T_crossing;
 		BuildingBlock curve;
 		BuildingBlock road =  getRoad(dirRoad, redLight);
-		if( exit ) {
+		if( fork ) {
 			curve = getCurve(dirRoad, curveBend, redLight);
 		}
 		// else reverse the curve, making it  an input curve
@@ -116,6 +105,8 @@ public class BuildingBlockFactory {
 		else {
 			T_crossing = blockFuse(road,curve);
 		}
+		
+		T_crossing.setDir(dirRoad);
 		
 		return T_crossing;
 		

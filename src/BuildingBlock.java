@@ -14,9 +14,22 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	private List<Matrix<Boolean>> stateList; // holds different possible states
 	private Matrix<Float> flowMatrix; // describes the inner flow of the building block
 	private int speedLimit;
+	private int dir;
 	
 	public BuildingBlock() {
 	
+		// Ground state
+		dir = 0; // undefined
+		stateNum = 0;
+		maxState = 0;
+		connections =  new Matrix<>(4,4,false);
+		stateList = new ArrayList<>();
+	
+	}
+	
+	public BuildingBlock(int dir) {
+		
+		this.dir = dir;
 		// Ground state
 		stateNum = 0;
 		maxState = 0;
@@ -41,17 +54,19 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 	}
 	
-	// TODO : Have image?
-	/*
-	public PImage getImage() {
-		return image;
+	public int getDir() {
+		return dir;
 	}
 	
-	
-	public void setImage(PImage image) {
-		this.image = image;
+	public void setDir(int dir) {
+		
+		if( dir < 4 && dir >= 0 ) {
+			
+			this.dir = dir;
+			
+		}
+		
 	}
-	*/
 	
 	public Matrix<Boolean> getCurrentState() {
 		return stateMatrix;
@@ -96,13 +111,6 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 			System.out.println("Cannot add new state : state dimension mismatch");
 		}
 		
-		/*
-		for(int i = 0; i < 4; i++) {
-			for(int j = 0; j < 4; j++) {
-				connections[i][j] = connections[i][j] || newStateMatrix[i][j];
-			}
-		}
-		*/
 	}
 	
 	// removes a state, makes sure that the connections is updated
@@ -138,22 +146,28 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	}
 	
 	// rotates 90 degrees anti-clockwise a specified number of times
-	public void rotate(int times) {
-		int count = times;
-		//Matrix<Boolean> matrix = new Matrix<Boolean>(stateMatrix);
-		while( count > 0 ) {
-			stateMatrix.rotate();
-			count--;
-		}
+	public void rotate() {
 		
-		//stateMatrix = Matrix.toArray(matrix);
+		// rotate each state
+		for( Matrix<Boolean> stateMatrix : stateList ) {
+			stateMatrix.shift();
+		}
+		connections.shift();
+		// bend the inner direction when rotating
+		dir = Direction.dirBend(dir,-1);
+		
 	}
 	
 	// flip block around an axis
-	public void flip(int axis) {
-		//Matrix<Boolean> matrix = new Matrix<Boolean>(stateMatrix);
-		stateMatrix.flip(axis);
-		//stateMatrix = Matrix.toArray(matrix);
+	public void flip() {
+		
+		//flip each state
+		for( Matrix<Boolean> stateMatrix : stateList ) {
+			stateMatrix.exchange(dir);
+		}
+		
+		connections.exchange(dir);
+		
 	}
 	
 	// reverts all current connections
@@ -175,44 +189,61 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 	}
 	
+	// mostly helper method in toString().
+	// returns a symmetric version of the current state, that is if there is a connection
+	// NORTH --> EAST the symmetric version also contains the connection EAST --> NORTH
 	public Matrix<Boolean> getSymmetricState() {
 		
 		Matrix<Boolean> symmetricMatrix = stateMatrix.clone();
 		
 		symmetricMatrix.transpose();
-		symmetricMatrix = symmetricMatrix.directOp(stateMatrix.clone(), Matrix.boolOr);
-		
+		//symmetricMatrix = symmetricMatrix.directOp(stateMatrix.clone(), Matrix.boolOr);
+		symmetricMatrix = symmetricMatrix.directOp(stateMatrix, Matrix.boolOr);
 		return symmetricMatrix;
 		
 	}
 	
+	// Some quite messy hard coded  toString. Very useful during coding to check if one's messy
+	// algoritms gives the results expected
 	@Override
 	public String toString() {
 		
 		String blockString = new String();
 		Matrix<Boolean> symState = getSymmetricState();
 		
-		blockString = blockString + " ";
+		blockString = blockString + "   ";
+		blockString = blockString + ( (stateMatrix.getColSum(Direction.NORTH, Matrix.boolOr)) ? "*" : " ");
+		blockString = blockString +  "\n";
+		
+		blockString = blockString + "  ";
 		blockString = blockString + ( ( symState.get(Direction.NORTH, Direction.WEST) ) ? "/" : " " );
 		blockString = blockString + ( ( symState.get(Direction.NORTH, Direction.SOUTH) )? "|" : "" );
 		blockString = blockString + ( symState.get(Direction.NORTH, Direction.EAST) ? "\\" : " " );
 		blockString = blockString + " \n";
 		
+		blockString = blockString + ( (stateMatrix.getColSum(Direction.WEST, Matrix.boolOr)) ? "*" : " ");
 		blockString = blockString + ( symState.get(Direction.NORTH, Direction.WEST) ? "/" : "" );
 		blockString = blockString + ( symState.get(Direction.WEST, Direction.EAST) ? "__" : "  " );
 		blockString = blockString + ( symState.get(Direction.NORTH, Direction.SOUTH) ? "|" : "" );
 		blockString = blockString + ( symState.get(Direction.WEST, Direction.EAST) ? "__" : "  " );
 		blockString = blockString + ( symState.get(Direction.NORTH, Direction.EAST) ? "\\" : "" );
+		blockString = blockString + ( (stateMatrix.getColSum(Direction.EAST, Matrix.boolOr)) ? "*" : " ");
 		blockString = blockString + "\n";
 		
-		blockString = blockString + ( symState.get(Direction.WEST, Direction.SOUTH) ? "\\" : "  " );
+		blockString = blockString + " ";
+		blockString = blockString + ( symState.get(Direction.WEST, Direction.SOUTH) ? "\\ " : "  " );
 		blockString = blockString + ( symState.get(Direction.NORTH, Direction.SOUTH) ? "|" : "" );
 		blockString = blockString + ( symState.get(Direction.EAST, Direction.SOUTH) ? " /" : "  " );
 		blockString = blockString + "\n";
 		
+		blockString = blockString + " ";
 		blockString = blockString + ( symState.get(Direction.WEST, Direction.SOUTH) ? " \\" : "  " );
 		blockString = blockString + ( symState.get(Direction.NORTH, Direction.SOUTH) ? "|" : "" );
 		blockString = blockString + ( symState.get(Direction.EAST, Direction.SOUTH) ? "/ " : "  " );
+		blockString = blockString +  "\n";
+		
+		blockString = blockString + "   ";
+		blockString = blockString + ( (stateMatrix.getColSum(Direction.SOUTH, Matrix.boolOr)) ? "*" : "  ");
 		
 		return blockString;
 	}

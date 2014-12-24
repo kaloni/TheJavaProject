@@ -8,8 +8,8 @@ public class Main {
 	public static void main(String[] args) {
 		
 		
-		int rows = 2;
-		int cols = 3;
+		int rows = 4;
+		int cols = 4;
 		
 		Boolean[][] tempBool = new Boolean[rows][cols];
 		Boolean[][] tempBool2 = new Boolean[cols][rows];
@@ -42,7 +42,7 @@ public class Main {
 			}
 		}
 		
-		/*
+		
 		Matrix<Boolean> matrix1 =  new Matrix<>(tempBool);
 		Matrix<Boolean> matrix2 =  new Matrix<>(tempBool2);
 		Matrix<Boolean> multMatrix = matrix1.matrixMult(matrix2, Matrix.boolOr, Matrix.boolAnd);
@@ -50,7 +50,7 @@ public class Main {
 		Matrix<Integer> intMatrix2 = new Matrix<>(tempInt2Array);
 		Matrix<Integer> intMultMatrix = intMatrix1.matrixMult(intMatrix2, Matrix.intAdd, Matrix.intMult);
 		//Matrix<Boolean> opMatrix = matrix1.directOp(matrix2, Matrix.boolOr);
-		*/
+		
 		Matrix<Integer> symIntMatrix1 = new Matrix<>(symIntArray);
 		Matrix<Integer> symIntMatrix2 = new Matrix<>(symIntArray2);
 		Matrix<Integer> intOpMatrix = symIntMatrix1.directOp(symIntMatrix2, Matrix.intAdd);
@@ -123,6 +123,12 @@ public class Main {
 		blockMatrix.set(1, 0, openCrossing);
 		blockMatrix.set(1, 1, T_crossing);
 		BlockObject blockObj = new BlockObject(blockMatrix);
+		
+		//System.out.println(intMatrix1);
+		//System.out.println(intMatrix1.getColSum(Direction.NORTH, Matrix.intAdd));
+		//System.out.println(intMatrix1.getColSum(Direction.EAST, Matrix.intAdd));
+		//System.out.println(intMatrix1.getColSum(Direction.SOUTH, Matrix.intAdd));
+		//System.out.println(intMatrix1.getColSum(Direction.WEST, Matrix.intAdd));
 		
 		
 		
