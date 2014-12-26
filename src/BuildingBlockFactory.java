@@ -9,7 +9,11 @@ import processing.core.PImage;
  */
 public class BuildingBlockFactory {
 	
-	public BuildingBlockFactory() {
+	private GUI gui;
+	
+	public BuildingBlockFactory(GUI gui) {
+		
+		this.gui = gui;
 		
 	}
 	
@@ -36,7 +40,28 @@ public class BuildingBlockFactory {
 			}
 			road.addState(stateMatrixGreenLight);
 			
+			road.blockSetup();
+			
 		return road;
+		
+	}
+	
+	public BuildingBlock getFork(int dir, int bend, boolean redLight) {
+		
+		BendedRoad fork = new BendedRoad(dir, bend, redLight, gui);
+		
+		Matrix<Boolean> stateMatrixRedLight = new Matrix<>(4,4,false);
+		Matrix<Boolean> stateMatrixGreenLight = new Matrix<>(4,4,false);
+		stateMatrixGreenLight.set(Direction.antiDir(dir), dir, true);
+		
+		if(redLight) {
+			fork.addState(stateMatrixRedLight);
+		}
+		fork.addState(stateMatrixGreenLight);
+		
+		fork.blockSetup();
+		
+		return fork;
 		
 	}
 	
@@ -44,7 +69,6 @@ public class BuildingBlockFactory {
 	public BuildingBlock getCurve(int dir, int bend, boolean redLight) {
 		
 		BuildingBlock curve = new BuildingBlock(dir);
-		
 		Matrix<Boolean> stateMatrixRedLight = new Matrix<>(4,4,false);
 		Matrix<Boolean> stateMatrixGreenLight = new Matrix<>(4,4,false);
 		stateMatrixGreenLight.set(Direction.antiDir(dir), Direction.dirBend(dir, bend), true);
@@ -53,6 +77,8 @@ public class BuildingBlockFactory {
 			curve.addState(stateMatrixRedLight);
 		}
 		curve.addState(stateMatrixGreenLight);
+		
+		curve.blockSetup();
 	
 	return curve;
 		
@@ -76,6 +102,8 @@ public class BuildingBlockFactory {
 		}
 		
 		crossing.setDir(dirX);
+		
+		crossing.blockSetup();
 		
 		return crossing;
 		
@@ -108,11 +136,13 @@ public class BuildingBlockFactory {
 		
 		T_crossing.setDir(dirRoad);
 		
+		T_crossing.blockSetup();
+		
 		return T_crossing;
 		
 	}
 	
-	public BuildingBlock blockFuse(BuildingBlock... blocks) {
+	public static BuildingBlock blockFuse(BuildingBlock... blocks) {
 		
 		BuildingBlock fusedBlock = new BuildingBlock();
 		int maxState = BuildingBlock.max(blocks).maxState();
@@ -136,7 +166,7 @@ public class BuildingBlockFactory {
 		return fusedBlock;
 	}
 	
-	public BuildingBlock blockSum(BuildingBlock... blocks) {
+	public static BuildingBlock blockSum(BuildingBlock... blocks) {
 		
 		BuildingBlock blockSum = new BuildingBlock();
 		// "Add" the matrices together

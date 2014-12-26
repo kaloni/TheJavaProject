@@ -5,10 +5,12 @@ import java.util.Set;
 
 public class BlockMap<K,V> extends HashMap {
 	
+	private K dummyKey;
 	private V dummyValue;
 	
-	public BlockMap(V dummyValue) {
+	public BlockMap(K dummyKey, V dummyValue) {
 		
+		this.dummyKey = dummyKey;
 		this.dummyValue = dummyValue;
 		
 	}
@@ -49,12 +51,12 @@ public class BlockMap<K,V> extends HashMap {
 			if( entry.getValue() == value ) {
 
 				return entry.getKey();
-			
+				
 			}
 		
 		}
 		
-		return (K) new Object();
+		return dummyKey;
 			
 	}
 	

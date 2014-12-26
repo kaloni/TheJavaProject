@@ -6,15 +6,15 @@ import processing.core.PImage;
 // TODO : Make all Boolean[][] --> Matrix<Boolean>
 class BuildingBlock implements Comparable<BuildingBlock> {
 
-	private PImage image;
-	private int stateNum; // numbers the current state
-	private int maxState; // current maximum number of states
-	private Matrix<Boolean> stateMatrix; // describes inner connectivity in a specific state
-	private Matrix<Boolean> connections; // Holds the set of accessible states = sum(all state matrices);
-	private List<Matrix<Boolean>> stateList; // holds different possible states
-	private Matrix<Float> flowMatrix; // describes the inner flow of the building block
-	private int speedLimit;
-	private int dir;
+	protected int stateNum; // numbers the current state
+	protected int maxState; // current maximum number of states
+	protected Matrix<Boolean> stateMatrix; // describes inner connectivity in a specific state
+	protected Matrix<Boolean> connectionMatrix; // Holds the set of accessible states = sum(all state matrices);
+	protected List<Matrix<Boolean>> stateList; // holds different possible states
+	protected Matrix<Float> flowMatrix; // describes the inner flow of the building block
+	protected int speedLimit;
+	protected int dir;
+	protected boolean diagonal;
 	
 	public BuildingBlock() {
 	
@@ -22,9 +22,11 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		dir = 0; // undefined
 		stateNum = 0;
 		maxState = 0;
-		connections =  new Matrix<>(4,4,false);
+		connectionMatrix =  new Matrix<>(4,4,false);
 		stateList = new ArrayList<>();
-	
+		diagonal = false;
+		connectionRing = new DataRing<>(4);
+		
 	}
 	
 	public BuildingBlock(int dir) {
@@ -33,9 +35,11 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		// Ground state
 		stateNum = 0;
 		maxState = 0;
-		connections =  new Matrix<>(4,4,false);
+		connectionMatrix =  new Matrix<>(4,4,false);
 		stateList = new ArrayList<>();
-	
+		diagonal = false;
+		connectionRing = new DataRing<>(4);
+		
 	}
 	
 	public static BuildingBlock max(BuildingBlock... blocks) {
@@ -52,6 +56,14 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 		return maxBlock;
 		
+	}
+	
+	public boolean isDiagonal() {
+		return diagonal;
+	}
+	
+	public void setDiagonal(boolean bool) {
+		diagonal = bool;
 	}
 	
 	public int getDir() {
@@ -86,6 +98,16 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		return stateList;
 	}
 	
+	public void addStateList(List<Matrix<Boolean>> stateList) {
+		
+		for(Matrix<Boolean> stateMatrix : stateList) {
+			
+			addState(stateMatrix);
+			
+		}
+		
+	}
+	
 	public void setState(int stateNum) {
 		if( 0 <= stateNum && stateNum < maxState) {
 			this.stateNum = stateNum;
@@ -105,7 +127,8 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 			if( maxState == 1) {
 				stateMatrix = newStateMatrix;
 			}
-			connections = connections.directOp(newStateMatrix, Matrix.boolOr);
+			connectionMatrix = connectionMatrix.directOp(newStateMatrix, Matrix.boolOr);
+			updateRing();
 		}
 		else {
 			System.out.println("Cannot add new state : state dimension mismatch");
@@ -120,17 +143,17 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 			
 		// AND all remaining states together to get rid of any non-true connections
 		for( Matrix<Boolean> state : stateList ) {
-			connections.directOp( state, Matrix.boolAnd);
+			connectionMatrix.directOp( state, Matrix.boolAnd);
 		}
 		// OR all together to update the connections
 		for( Matrix<Boolean> state : stateList) {
-			connections.directOp( state,  Matrix.boolOr);
+			connectionMatrix.directOp( state,  Matrix.boolOr);
 		}
 			
 	}
 		
 	public Matrix<Boolean> getConnections() {
-		return connections;
+		return connectionMatrix;
 	}
 	
 	public int maxState() {
@@ -148,13 +171,21 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	// rotates 90 degrees anti-clockwise a specified number of times
 	public void rotate() {
 		
-		// rotate each state
-		for( Matrix<Boolean> stateMatrix : stateList ) {
-			stateMatrix.shift();
+		if( diagonal ) {
+			
+			// rotate each state
+			for( Matrix<Boolean> stateMatrix : stateList ) {
+				stateMatrix.shift();
+			}
+			connectionMatrix.shift();
+			// bend the inner direction when rotating
+			dir = Direction.dirBend(dir,+1);
+			connectionRing.cycle(-1);
+			
 		}
-		connections.shift();
-		// bend the inner direction when rotating
-		dir = Direction.dirBend(dir,-1);
+		
+		diagonal = !diagonal;
+	
 		
 	}
 	
@@ -166,7 +197,8 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 			stateMatrix.exchange(dir);
 		}
 		
-		connections.exchange(dir);
+		connectionMatrix.exchange(dir);
+		connectionRing.constraintCycle( (dir % 2) == 0 ? DataRing.intOdd : DataRing.intEven);
 		
 	}
 	
@@ -247,5 +279,87 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 		return blockString;
 	}
+	
+	
+	////// GUI TESTING ////////
+	
+	protected GUI gui;
+	protected DataRing<Boolean> connectionRing;
+
+	public void blockSetup() {
+		
+		connectionRing = new DataRing<>(4);
+		
+		for(int r = 0; r < 4; r++) {
+			connectionRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr) || connectionMatrix.getColSum(r, Matrix.boolOr));
+		}
+		
+	}
+	
+	protected void updateRing() {
+		
+		for(int r = 0; r < 4; r++) {
+			connectionRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr) || connectionMatrix.getColSum(r, Matrix.boolOr));
+		}
+		
+	}
+	
+	public void display() {
+		
+	}
+	
+	public DataRing getConnectionRing() {
+		return connectionRing;
+	}
+	
+	protected BuildingBlock blockFuse(BuildingBlock... blocks) {
+		
+		BuildingBlock fusedBlock = new BuildingBlock();
+		int maxState = BuildingBlock.max(blocks).maxState();
+		// "Fuse" (OR) the matrices together
+		for(int stateNum = 0; stateNum < maxState; stateNum++) {
+			
+			Matrix<Boolean> tempFusedMatrix = new Matrix<Boolean>(4,4,false);
+			
+			for( BuildingBlock block : blocks ) {
+				
+				// Sum up a state over all blocks
+				tempFusedMatrix = tempFusedMatrix.directOp(block.getState(stateNum), Matrix.boolOr);
+				
+			}
+			
+			// add one state, summed over all blocks to the fused block
+			fusedBlock.addState(tempFusedMatrix);
+			
+		}
+		
+		return fusedBlock;
+	}
+	
+	protected BuildingBlock blockSum(BuildingBlock... blocks) {
+		
+		BuildingBlock blockSum = new BuildingBlock();
+		// "Add" the matrices together
+		for( BuildingBlock block : blocks ) {
+			for(int stateNum = 0; stateNum < block.maxState(); stateNum++) {
+				blockSum.addState(block.getState(stateNum));
+			}
+		}
+		
+		return blockSum;
+		
+	}
+	
+	/*
+	public void setParent(GUI gui) {
+		this.gui = gui;
+	}
+	
+	public void display() {
+		
+		gui.displayBlock(dir, diagonal);
+		
+	}
+	*/
 	
 }

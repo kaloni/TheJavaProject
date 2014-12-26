@@ -92,12 +92,14 @@ public class Main {
 		
 		// BuildingBlock and BuildingBlockFactory test
 		
+		/*
 		BuildingBlockFactory factory = new BuildingBlockFactory();
 		BuildingBlock road = factory.getRoad(Direction.EAST, false);
 		BuildingBlock curve = factory.getCurve(Direction.EAST, Direction.LEFT, false);
 		BuildingBlock openCrossing = factory.getCrossing(Direction.SOUTH, Direction.EAST, false);
 		BuildingBlock redLightCrossing = factory.getCrossing(Direction.EAST, Direction.NORTH, true);
 		BuildingBlock T_crossing = factory.getTCrossing(Direction.EAST, Direction.LEFT, true, false);
+		*/
 		
 		/*
 		System.out.println(road);
@@ -116,6 +118,7 @@ public class Main {
 		System.out.println(T_crossing.getCurrentState());
 		*/
 		
+		/*
 		///////// BlockObject test ////////
 		Matrix<BuildingBlock> blockMatrix = new Matrix<>(2,2);
 		blockMatrix.set(0, 0, road);
@@ -123,6 +126,7 @@ public class Main {
 		blockMatrix.set(1, 0, openCrossing);
 		blockMatrix.set(1, 1, T_crossing);
 		BlockObject blockObj = new BlockObject(blockMatrix);
+		*/
 		
 		//System.out.println(intMatrix1);
 		//System.out.println(intMatrix1.getColSum(Direction.NORTH, Matrix.intAdd));
@@ -131,6 +135,44 @@ public class Main {
 		//System.out.println(intMatrix1.getColSum(Direction.WEST, Matrix.intAdd));
 		
 		
+		Integer[] intArray = new Integer[17];
+		Boolean[] boolArray = new Boolean[4];
+		
+		for(int i = 0; i < 17; i++) {
+			
+			intArray[i] = new Random().nextInt(10);
+			
+		}
+		
+		for(int i = 0; i < 4; i++) {
+			
+			boolArray[i] = new Random().nextInt(2) == 1;
+			
+		}
+		
+		DataRing<Integer> ring = new DataRing<>(intArray);
+		DataRing<Boolean> boolRing = new DataRing<>(boolArray);
+		
+		System.out.println(boolRing);
+		boolRing.constraintCycle(DataRing.intEven);
+		System.out.println(boolRing);
+		boolRing.constraintCycle(DataRing.intEven);
+		System.out.println(boolRing);
+		
+		
+		/*
+		ring.constraintCycle(DataRing.intEven);
+		System.out.println(ring);
+		ring.constraintCycle(DataRing.intEven);
+		System.out.println(ring);
+		ring.constraintCycle(DataRing.intOdd);
+		System.out.println(ring);
+		*/
+		
+		/*
+		ring.cycle(1);
+		System.out.println(ring);
+		*/
 		
 	}
 
