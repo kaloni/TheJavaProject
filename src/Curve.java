@@ -1,6 +1,7 @@
 
 public class Curve extends BuildingBlock {
 
+	// bend = +-1
 	int bend;
 	
 	public Curve(int dir, int bend, boolean redLight, GUI gui) {

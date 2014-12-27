@@ -7,6 +7,7 @@ public class Matrix<E> {
 
 	
 	////////////// MATRIX CONSTRUCTORS (3) ///////////////
+	
 	// constructs a new matrix according to some array pattern
 	public Matrix(E[][] innerMatrix) {
 		this.innerMatrix = innerMatrix;
@@ -14,7 +15,7 @@ public class Matrix<E> {
 		cols = innerMatrix[0].length;
 	}
 	
-	// constructs a rows x cols matrix with default value
+	// constructs a rows * cols matrix with default value
 	public Matrix(int rows, int cols, E defaultValue) {
 		
 		this.rows = rows;
@@ -29,7 +30,7 @@ public class Matrix<E> {
 		
 	}
 	
-	// Constructs a rows x cols null matrix
+	// Constructs a rows x cols (undef) matrix
 	public Matrix(int rows, int cols) {
 		
 		this.rows = rows;
@@ -38,10 +39,11 @@ public class Matrix<E> {
 		innerMatrix = (E[][]) new Object[rows][cols];
 		
 	}
+	
 	///////////////////////////////////////////////////////
 	
 	/////////  functional passing using lambda expressions ///////////////
-	// PRIVATES : TODO : Might have to be public?
+	
 	private E binaryOp(E a, E b, BinaryOperation<E> op) {
 		return op.operation(a, b);
 	}
@@ -50,13 +52,14 @@ public class Matrix<E> {
 		E operation(E a, E b);
 	}
 	
-	// PUBLIC STATICS : OPERATIONS
+	// STATIC OPERATIONS
 	public static BinaryOperation<Boolean> boolOr = (a,b) -> a || b;
 	public static BinaryOperation<Boolean> boolAnd = (a,b) -> a && b;
 	public static BinaryOperation<Integer> intAdd = (a,b) -> a + b;
 	public static BinaryOperation<Float> floatAdd= (a,b) -> a + b;
 	public static BinaryOperation<Integer> intMult= (a,b) -> a * b;
 	public static BinaryOperation<Float> floatMult= (a,b) -> a * b;
+	
 	///////////////////////////////////////////////////////////////////////
 	
 	public int rows() {
@@ -112,6 +115,7 @@ public class Matrix<E> {
 		return col;
 	}
 	
+	// Sums up a row with corresponding operation
 	public E getRowSum(int row, BinaryOperation<E> opAdd) {
 		
 		// init for !null
@@ -132,6 +136,7 @@ public class Matrix<E> {
 		
 	}
 	
+	// Sums up a column with corresponding operation
 	public E getColSum(int col, BinaryOperation<E> opAdd) {
 		
 		// init for !null
@@ -187,8 +192,11 @@ public class Matrix<E> {
 	}
 	
 	// Generic matrix direct operation
+	// Returns this is dimensions mismatch
 	public Matrix<E> directOp(Matrix<E> matrix, BinaryOperation<E> directOp) {
+		
 		E[][] tempArray = (E[][]) new Object[rows][cols];
+		
 		if( rows == matrix.rows() && cols == matrix.cols() ) {
 			Matrix<E> opMatrix = new Matrix<E>(tempArray);
 			for(int r = 0; r < rows; r++) {
@@ -205,9 +213,10 @@ public class Matrix<E> {
 		
 	}
 	
-	 // Generic matrix multiplication, returs this if dimensions mismatch
+	 // Generic matrix multiplication, returns this if dimensions mismatch
 	 // Returns this is dimensions mismatch
 	public Matrix<E> matrixMult(Matrix<E> matrix, BinaryOperation opAdd, BinaryOperation opMult) {
+		
 		if( cols == matrix.rows() ) {
 			
 			int newCols = matrix.cols;
@@ -232,6 +241,7 @@ public class Matrix<E> {
 		}
 	}
 	
+	// anti-clockwise rotation of matrix
 	public void rotate() {
 		
 		Matrix<E> tempMatrix = new Matrix<E>(cols,rows);
@@ -244,6 +254,7 @@ public class Matrix<E> {
 			
 	}
 	
+	// flip matrix around axis
 	public void flip(int axis) {
 		
 		Matrix<E> tempMatrix = clone();
@@ -274,7 +285,8 @@ public class Matrix<E> {
 			tempMatrix.setRow(c, getCol(c));
 		}
 		
-		setInnerMatrix( tempMatrix.cloneInnerMatrix() );
+		innerMatrix = tempMatrix.cloneInnerMatrix();
+		
 	}
 	
 	// methods that realizes the rotation of a building block
@@ -290,7 +302,7 @@ public class Matrix<E> {
 		}
 	}
 	
-	// exchange realized the flip of a matrix around an axis
+	// exchange realizes the flip of a block around an axis
 	// maps if(axis == EAST||WEST) : (EW,NS) --> (EW,SN) && (NS,EW) --> (SN,EW)
 	// else : (EW,NS) --> (WE,NS) && (NS,EW) --> (NS, WE)
 	// Very messy code, did not find any other way to do this...
@@ -355,6 +367,8 @@ public class Matrix<E> {
 	}
 	
 	
+	///////// HELPER METHODS ////////
+	
 	// makes an array version copy of the matrix
 	public static <T> T[][] toArray(Matrix<T> matrix) {
 		
@@ -379,26 +393,31 @@ public class Matrix<E> {
 		
 	}
 	
+	/*
+	 *  cloneInnerMatrix and setInnerMatrix are actually equivalent operations, just different usages
+	 *  cloneInnerMatrix return a reference free version of the innerMatrix
+	 *  setInnerMatrix sets innerMatrix to another E[][] array and removes references.
+	 */
 	// clones the innerMatrix, making the new clone reference free from innerMatrix
-		private E[][] cloneInnerMatrix() {
+	private E[][] cloneInnerMatrix() {
 
-			E[][] innerMatrixClone = (E[][]) new Object[rows][cols];
+		E[][] innerMatrixClone = (E[][]) new Object[rows][cols];
 				
-			for(int r = 0; r < rows; r++) {
-				for(int c = 0; c < cols; c++) {
-					innerMatrixClone[r][c] = innerMatrix[r][c];
-				}
+		for(int r = 0; r < rows; r++) {
+			for(int c = 0; c < cols; c++) {
+				innerMatrixClone[r][c] = innerMatrix[r][c];
 			}
-				
-			return innerMatrixClone;
-				
 		}
-		
-		// TODO : redundant?
-		private void setInnerMatrix(E[][] innerMatrix) {
-			this.innerMatrix = innerMatrix;
-			rows = innerMatrix.length;
-			cols = innerMatrix[0].length;
-		}
+				
+		return innerMatrixClone;
+				
+	}
+	
+	private void setInnerMatrix(E[][] innerMatrix) {
+		this.innerMatrix = innerMatrix;
+		rows = innerMatrix.length;
+		cols = innerMatrix[0].length;
+	}
+	
 	
 }

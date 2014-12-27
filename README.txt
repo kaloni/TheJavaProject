@@ -1,15 +1,15 @@
 ////////// GUI extends PApplet //////////
 
-CONSTRUCTOR
-+ GUI(int,int)
-
 METHODS
 + void drawBlock(PVector,BuildingBlock)
-+ void  drawBackground(Pos)
-+ void  setBlockObj(Pos,BlockObject)
++ void drawBackground(Pos)
++ void displayBlock(DataRing<Boolean>, boolean)
++ void displayBendedRoad(DataRing<Boolean>, bool, int, int)
++ void setBlockObj(Pos,BlockObject)
 + PVector posToVec(Pos)
 + Pos vecToPos(PVector)
 + Pos XYtoPos(float,float)
++ int scaleConverter(float)
 + void keyPressed()
 + void mousePressed
 
@@ -18,7 +18,7 @@ METHODS
 ////////// BlockMap<K,V> extends HashMap//////////
 
 CONSTRUCTOR
-+ BlockMap(V)
++ BlockMap(K,V)
 
 PUBLIC METHODS
 + K getKey(V)
@@ -51,44 +51,39 @@ STATIC METHODS
 
 PUBLIC METHODS
 // getters //
++ boolean isDiagonal()
 + int getDir()
 + Matrix<Boolean> getCurrentState()
 + Matrix<Boolean> getState(int)
-+ Matrix<Boolean> getConnections()
 + List<Matrix<Boolean>> getStateList()
-+ Matrix<Float> getFlow()
++ Matrix<Boolean> getConnectionMatrix()
++ Ring<Boolean> getConnectionRing
++ Matrix<Float> getFlowMatrix()
 + int maxState()
++ int compareTo(BuildingBlock)
 
 // setters //
++ void setDiagonal(boolean)
 + void setDir(int)
 + void setState(int stateNum)
 + void addState(Matrix<Boolean>)
 + void removeState(int)
-+ void setFlow(Matrix<Float>)
++ void setFlowMatrix(Matrix<Float>)
 + void rotate(int)
 + void flip(int)
 + void revert()
-+ int compareTo(BuildingBlock)
 
 // helpers //
-+ Matrix<Boolean> getSymmetricState
 + String toString()
 
 
-/////////// BuildingBlockFactory //////////
+////////// BuildingBlock subclasses with constructors //////////////
 
-CONSTRUCTOR
-+ BuildingBlockFactory()
-
-PUBLIC METHODS
-// getters //
-+ BuildingBlock getDummyBlock()
-+ BuildingBlock getRoad(int,boolean)
-+ BuildingBlock getCurve(int,int,boolean)
-+ BuildingBlock getCrossing(int,int,boolean)
-+ BuildingBlock getTCrossing(int,int,boolean,boolean)
-+ BuildingBlock blockFuse(BuildingBlock…)
-+ BuildingBlock blockSum(BuildingBlock…)
+Road(int,boolean,GUI)
+BendedRoad(int,int,boolean,GUI)
+Curve(int,int,boolean,GUI)
+Crossing(int,int,boolean,GUI)
+TCrossing(int,int,boolean,boolean,GUI)
 
 
 
@@ -135,6 +130,28 @@ PUBLIC METHODS
 + void exchange()
 
 // helpers //
++ toString()
+
+
+////////// DataRing<E> /////////////
+
+CONSTRUCTORS (3)
++ DataRing()
++ DataRing(int)
++ DataRing(E[])
+
+STATIC FIELDS
+- UnitaryOperation<Integer,Boolean> intEven
+- UnitaryOperation<Integer,Boolean> intOdd
+
+PUBLIC METHODS
++ get(int)
++ set(int)
++ add(int)
++ remove(int)
++ void cycle()
++ void modCycle(int)
++ void constraintCycle(UnitaryOperation<Integer,Boolean>)
 + toString()
 
 

@@ -21,37 +21,4 @@ public class BendedRoad extends Curve {
 		
 	}
 	
-	
-	
-	
-	
-	/*
-	public void setCurvature(int curvature) {
-		
-		if( curvature > 3 || curvature < 3 ) {
-			this.curvature = curvature;
-			
-			if(curvature == 1 || curvature == -1) {
-				fork = true;
-			}
-			
-		}
-		
-	}
-	
-	public void changeCurvature(int delta) {
-		
-		if( delta < 0 ) {
-			setCurvature(curvature - 1);
-		}
-		else if( delta > 0 ) {
-			setCurvature(curvature + 1);
-		}
-		
-	}
-	*/
-	
-	
-	
-	
 }

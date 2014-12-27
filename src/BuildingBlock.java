@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import processing.core.PImage;
 
 // TODO : Make all Boolean[][] --> Matrix<Boolean>
 class BuildingBlock implements Comparable<BuildingBlock> {
@@ -10,11 +9,16 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	protected int maxState; // current maximum number of states
 	protected Matrix<Boolean> stateMatrix; // describes inner connectivity in a specific state
 	protected Matrix<Boolean> connectionMatrix; // Holds the set of accessible states = sum(all state matrices);
+	protected DataRing<Boolean> connectionRing;
 	protected List<Matrix<Boolean>> stateList; // holds different possible states
 	protected Matrix<Float> flowMatrix; // describes the inner flow of the building block
 	protected int speedLimit;
 	protected int dir;
 	protected boolean diagonal;
+	
+	protected GUI gui;
+	
+	////////// CONSTRUCTORS (2) //////////
 	
 	public BuildingBlock() {
 	
@@ -42,7 +46,65 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 	}
 	
-	public static BuildingBlock max(BuildingBlock... blocks) {
+	////////// ////////// //////////
+	
+	/////////// PROTECTED METHODS //////////////
+	
+	/*
+	 * blockFuse and blockSum is used to mix different blocks together to create new ones
+	 * they are used in the constructors in subclasses
+	 */
+	
+	protected BuildingBlock blockFuse(BuildingBlock... blocks) {
+		
+		BuildingBlock fusedBlock = new BuildingBlock();
+		int maxState = BuildingBlock.max(blocks).maxState();
+		// "Fuse" (OR) the matrices together
+		for(int stateNum = 0; stateNum < maxState; stateNum++) {
+			
+			Matrix<Boolean> tempFusedMatrix = new Matrix<Boolean>(4,4,false);
+			
+			for( BuildingBlock block : blocks ) {
+				
+				// Sum up a state over all blocks
+				tempFusedMatrix = tempFusedMatrix.directOp(block.getState(stateNum), Matrix.boolOr);
+				
+			}
+			
+			// add one state, summed over all blocks to the fused block
+			fusedBlock.addState(tempFusedMatrix);
+			
+		}
+		
+		return fusedBlock;
+	}
+	
+	protected BuildingBlock blockSum(BuildingBlock... blocks) {
+		
+		BuildingBlock blockSum = new BuildingBlock();
+		// "Add" the matrices together
+		for( BuildingBlock block : blocks ) {
+			for(int stateNum = 0; stateNum < block.maxState(); stateNum++) {
+				blockSum.addState(block.getState(stateNum));
+			}
+		}
+		
+		return blockSum;
+		
+	}
+	
+	protected void updateRing() {
+		
+		for(int r = 0; r < 4; r++) {
+			connectionRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr) || connectionMatrix.getColSum(r, Matrix.boolOr));
+		}
+		
+	}
+	
+	////////// ////////// //////////
+	
+	// max compares blocks by their amount of states
+	static BuildingBlock max(BuildingBlock... blocks) {
 		
 		// Create smallest possible block (according to compareTo)
 		BuildingBlock maxBlock = new BuildingBlock();
@@ -55,6 +117,22 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		}
 		
 		return maxBlock;
+		
+	}
+	
+	public int compareTo(BuildingBlock block) {
+		
+		int otherMaxState = block.maxState();
+		int compareInt = (maxState < otherMaxState) ? -1 : 1;
+		if( maxState == otherMaxState ) { compareInt = 0;}
+		
+		return compareInt;
+		
+	}
+	
+	// this is only to ensure that one can call display on an arbitrary BuildingBlock
+	// Implementation is given in each subclass
+	public void display() {
 		
 	}
 	
@@ -98,26 +176,6 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		return stateList;
 	}
 	
-	public void addStateList(List<Matrix<Boolean>> stateList) {
-		
-		for(Matrix<Boolean> stateMatrix : stateList) {
-			
-			addState(stateMatrix);
-			
-		}
-		
-	}
-	
-	public void setState(int stateNum) {
-		if( 0 <= stateNum && stateNum < maxState) {
-			this.stateNum = stateNum;
-			stateMatrix = stateList.get(stateNum);
-		}
-		else {
-			System.out.println("Cannot set state : state index out of bounds");
-		}
-	}
-	
 	// adds a state, makes sure that the connections is updated
 	public void addState(Matrix<Boolean> newStateMatrix) {
 		if( newStateMatrix.rows() == 4 && newStateMatrix.cols() == 4) {
@@ -132,6 +190,26 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		}
 		else {
 			System.out.println("Cannot add new state : state dimension mismatch");
+		}
+			
+	}
+	
+	public void setState(int stateNum) {
+		if( 0 <= stateNum && stateNum < maxState) {
+			this.stateNum = stateNum;
+			stateMatrix = stateList.get(stateNum);
+		}
+		else {
+			System.out.println("Cannot set state : state index out of bounds");
+		}
+	}
+	
+	public void addStateList(List<Matrix<Boolean>> stateList) {
+		
+		for(Matrix<Boolean> stateMatrix : stateList) {
+			
+			addState(stateMatrix);
+			
 		}
 		
 	}
@@ -149,26 +227,32 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		for( Matrix<Boolean> state : stateList) {
 			connectionMatrix.directOp( state,  Matrix.boolOr);
 		}
+		
+		updateRing();
 			
 	}
 		
-	public Matrix<Boolean> getConnections() {
+	public Matrix<Boolean> getConnectionMatrix() {
 		return connectionMatrix;
+	}
+	
+	public DataRing<Boolean> getConnectionRing() {
+		return connectionRing;
 	}
 	
 	public int maxState() {
 		return maxState;
 	}
 	
-	public void setFlow(Matrix<Float> flowMatrix) {
-		this.flowMatrix = flowMatrix;
-	}
-	
-	public Matrix<Float> getFlow() {
+	public Matrix<Float> getFlowMatrix() {
 		return flowMatrix;
 	}
 	
-	// rotates 90 degrees anti-clockwise a specified number of times
+	public void setFlowMatrix(Matrix<Float> flowMatrix) {
+		this.flowMatrix = flowMatrix;
+	}
+	
+	// rotates the block 45 degrees
 	public void rotate() {
 		
 		if( diagonal ) {
@@ -186,10 +270,9 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 		diagonal = !diagonal;
 	
-		
 	}
 	
-	// flip block around an axis
+	// flip block around the blocks axis
 	public void flip() {
 		
 		//flip each state
@@ -211,20 +294,13 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 	}
 	
-	public int compareTo(BuildingBlock block) {
-		
-		int otherMaxState = block.maxState();
-		int compareInt = (maxState < otherMaxState) ? -1 : 1;
-		if( maxState == otherMaxState ) { compareInt = 0;}
-		
-		return compareInt;
-		
-	}
 	
-	// mostly helper method in toString().
-	// returns a symmetric version of the current state, that is if there is a connection
+	////////// HELPER METHODS //////////
+	
+	// Helper method in toString().
+	// Returns a symmetric version of the current state, that is if there is a connection
 	// NORTH --> EAST the symmetric version also contains the connection EAST --> NORTH
-	public Matrix<Boolean> getSymmetricState() {
+	private Matrix<Boolean> getSymmetricState() {
 		
 		Matrix<Boolean> symmetricMatrix = stateMatrix.clone();
 		
@@ -278,88 +354,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		blockString = blockString + ( (stateMatrix.getColSum(Direction.SOUTH, Matrix.boolOr)) ? "*" : "  ");
 		
 		return blockString;
-	}
-	
-	
-	////// GUI TESTING ////////
-	
-	protected GUI gui;
-	protected DataRing<Boolean> connectionRing;
-
-	public void blockSetup() {
-		
-		connectionRing = new DataRing<>(4);
-		
-		for(int r = 0; r < 4; r++) {
-			connectionRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr) || connectionMatrix.getColSum(r, Matrix.boolOr));
-		}
 		
 	}
-	
-	protected void updateRing() {
-		
-		for(int r = 0; r < 4; r++) {
-			connectionRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr) || connectionMatrix.getColSum(r, Matrix.boolOr));
-		}
-		
-	}
-	
-	public void display() {
-		
-	}
-	
-	public DataRing getConnectionRing() {
-		return connectionRing;
-	}
-	
-	protected BuildingBlock blockFuse(BuildingBlock... blocks) {
-		
-		BuildingBlock fusedBlock = new BuildingBlock();
-		int maxState = BuildingBlock.max(blocks).maxState();
-		// "Fuse" (OR) the matrices together
-		for(int stateNum = 0; stateNum < maxState; stateNum++) {
-			
-			Matrix<Boolean> tempFusedMatrix = new Matrix<Boolean>(4,4,false);
-			
-			for( BuildingBlock block : blocks ) {
-				
-				// Sum up a state over all blocks
-				tempFusedMatrix = tempFusedMatrix.directOp(block.getState(stateNum), Matrix.boolOr);
-				
-			}
-			
-			// add one state, summed over all blocks to the fused block
-			fusedBlock.addState(tempFusedMatrix);
-			
-		}
-		
-		return fusedBlock;
-	}
-	
-	protected BuildingBlock blockSum(BuildingBlock... blocks) {
-		
-		BuildingBlock blockSum = new BuildingBlock();
-		// "Add" the matrices together
-		for( BuildingBlock block : blocks ) {
-			for(int stateNum = 0; stateNum < block.maxState(); stateNum++) {
-				blockSum.addState(block.getState(stateNum));
-			}
-		}
-		
-		return blockSum;
-		
-	}
-	
-	/*
-	public void setParent(GUI gui) {
-		this.gui = gui;
-	}
-	
-	public void display() {
-		
-		gui.displayBlock(dir, diagonal);
-		
-	}
-	*/
 	
 }

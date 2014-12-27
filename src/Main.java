@@ -3,6 +3,10 @@ import java.util.Random;
 
 public class Main {
 	
+	/*
+	 * Use Main for testing
+	 */
+	
 	Matrix<Integer> matrix;
 
 	public static void main(String[] args) {

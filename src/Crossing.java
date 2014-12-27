@@ -27,6 +27,7 @@ public class Crossing extends BuildingBlock {
 		
 	}
 
+	@Override
 	public void display() {
 		
 		gui.displayBlock(connectionRing, diagonal);

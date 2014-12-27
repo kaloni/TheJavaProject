@@ -46,24 +46,5 @@ public class BlockObject {
 	public void setSpeedLimit(int speedLimit) {
 		this.speedLimit = speedLimit;
 	}
-	
-	
-	/* TODO : connect FROM?
-	public void connect(Pos pos1, Pos pos2) {
-		
-		// gets direction
-		int dir;
-		
-		if( pos1.x < rows && pos2.x < rows && pos1.y < cols && pos2.y < cols
-				&& pos1.x >= 0 && pos2.x >= 0 && pos1.y >= 0 && pos2.y >= 0 ) {
-			if( Pos.distance(pos1,pos2) <= 1) {
-				// posVec pointing from pos1 to pos2 (where to create connection IN pos1)
-				Pos posVec = pos2.sub(pos1);
-				dir = Direction.getDirection(posVec);
-			}
-		}
-		
-	}
-	*/
 
 }

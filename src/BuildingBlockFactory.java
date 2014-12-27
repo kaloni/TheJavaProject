@@ -1,11 +1,8 @@
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import processing.core.PImage;
+/// THIS CLASS IS OUT OF DATE ///
 
 /*
- * Factory Class for BuildingBlock. This is where we will get the different kinds of building blocks from
+ * Factory Class for BuildingBlock.
+ * 
  */
 public class BuildingBlockFactory {
 	
@@ -40,8 +37,6 @@ public class BuildingBlockFactory {
 			}
 			road.addState(stateMatrixGreenLight);
 			
-			road.blockSetup();
-			
 		return road;
 		
 	}
@@ -59,8 +54,6 @@ public class BuildingBlockFactory {
 		}
 		fork.addState(stateMatrixGreenLight);
 		
-		fork.blockSetup();
-		
 		return fork;
 		
 	}
@@ -77,8 +70,6 @@ public class BuildingBlockFactory {
 			curve.addState(stateMatrixRedLight);
 		}
 		curve.addState(stateMatrixGreenLight);
-		
-		curve.blockSetup();
 	
 	return curve;
 		
@@ -102,8 +93,6 @@ public class BuildingBlockFactory {
 		}
 		
 		crossing.setDir(dirX);
-		
-		crossing.blockSetup();
 		
 		return crossing;
 		
@@ -135,8 +124,6 @@ public class BuildingBlockFactory {
 		}
 		
 		T_crossing.setDir(dirRoad);
-		
-		T_crossing.blockSetup();
 		
 		return T_crossing;
 		

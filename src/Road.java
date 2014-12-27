@@ -1,8 +1,6 @@
 
 public class Road extends BuildingBlock {
 
-	
-	
 	public Road(int dir, boolean redLight, GUI gui) {
 		
 		super(dir);
@@ -19,10 +17,11 @@ public class Road extends BuildingBlock {
 		
 	}
 	
+	@Override
 	public void display() {
 		
 		gui.displayBlock(connectionRing, diagonal);
 		
 	}
-
+	
 }

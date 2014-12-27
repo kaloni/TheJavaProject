@@ -45,6 +45,7 @@ public class DataRing<E> {
 		return size;
 	}
 	
+	// cycle the ring
 	public void cycle(int shift) {
 		
 		E[] tempRing = (E[]) new Object[size];
@@ -77,6 +78,7 @@ public class DataRing<E> {
 		
 	}
 	
+	// cycle only indices i % mod == 0
 	public void modCycle(int mod) {
 		
 		if( mod > 0 ) {
@@ -171,6 +173,7 @@ public class DataRing<E> {
 		
 	}
 	
+	// adds element to index (gets pushed in between current elements)
 	public void add(int i, E ele) {
 		
 		int modi = i % (size+1);

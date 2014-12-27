@@ -15,11 +15,9 @@ public class GUI extends PApplet {
 	private int width;
 	private int height;
 	private final float blockScale = 30f; // any positive float
-	private final float roadScale = 15f; // between 0 blockScale for new version?
-	//private final float roadScale = 0.5f;
-	float Xoffset;
-	float Yoffset;
+	private final float roadScale = 15f; // between 0 and blockScale
 	
+	////////// FINAL CONSTANTS /////////
 	// TODO : Add curvature to the displaying of BendedRoad
 	Matrix<Float> bendedRoadCurvature;
 	
@@ -39,44 +37,31 @@ public class GUI extends PApplet {
 	private final float[] YoffsetsRotated  = {- blockScale*(sqrt(2) - 1)/2, (blockScale - roadScale)/2, (blockScale + roadScale)/2, (blockScale - roadScale)/2};
 	private final float [] roadScaleXRotated = {roadScale, blockScale/sqrt(2) - roadScale/2, roadScale, blockScale/sqrt(2) - roadScale/2};
 	private final float [] roadScaleYRotated = {blockScale/sqrt(2) - roadScale/2, roadScale, blockScale/sqrt(2) - roadScale/2, roadScale};
-	/*
-	private final float[] XoffsetsRotated = {(blockScale - roadScale)/2, (blockScale - roadScale)/2, (blockScale - roadScale)/2, - blockScale*(sqrt(2) - 1)/2};
-	private final float[] YoffsetsRotated  = {- blockScale*(sqrt(2) - 1)/2, (blockScale - roadScale)/2, (blockScale - roadScale)/2, (blockScale - roadScale)/2};
-	private final float [] roadScaleXRotated = {roadScale, blockScale*sqrt(2) - roadScale/2, roadScale, blockScale*sqrt(2) - roadScale/2};
-	private final float [] roadScaleYRotated = {blockScale*sqrt(2) - roadScale/2, roadScale, blockScale*sqrt(2) - roadScale/2, roadScale};
-	*/
-	private Pos mousePos;
 	
+	private Pos mousePos;
 	private BlockMap<Pos,BuildingBlock> blockMap;
 	private Set<Map.Entry<Pos, BuildingBlock>> mapSet;
-	private final BuildingBlockFactory blockFactory = new BuildingBlockFactory(this);
 	private BuildingBlock blockFocus;
 	private BuildingBlock newBlockFocus;
 	
+	///////// ////////// ///////////
+	
 	// TODO : implement the panel
 	private JPanel blockPanel;
-	
-	public void GUI(int width, int height) {
-		
-		this.width = width;
-		this.height = height;
-		
-	}
 	
 	public void setup() {
 		
 		// TODO : This should not be set here, just during testing stage
 		width = 1000;
 		height = 700;
-		//roadScale = 0.5f;
-		
 		size(width,height);
 		background(backgroundColor[0],backgroundColor[1],backgroundColor[2]);
-		blockMap = new BlockMap(new Pos(-1,-1), blockFactory.getDummyBlock());
+		
+		BuildingBlock dummyBlock = new BuildingBlock();
+		dummyBlock.addState(new Matrix<>(4,4,false));
+		blockMap = new BlockMap<>(new Pos(-1,-1), dummyBlock);
 		mapSet = blockMap.entrySet();
 		mousePos = new Pos(0,0);
-
-
 		
 		noStroke();
 		
@@ -84,7 +69,6 @@ public class GUI extends PApplet {
 	
 	public void draw() {
 		
-		//mousePos = XYtoPos(mouseX, mouseY);
 		mousePos.x = scaleConverter(mouseX);
 		mousePos.y = scaleConverter(mouseY);
 		
@@ -94,22 +78,11 @@ public class GUI extends PApplet {
 		// draw all in blockMap
 		for( Map.Entry<Pos, BuildingBlock> blockEntry : mapSet ) {
 			
-			// convert Pos --> PVector and draw
-			//drawBlock(new Pos( (blockEntry.getKey().x ), ( blockEntry.getKey().y) ), blockEntry.getValue());
-			
-			// below is probably better way of coding!
-			
-			/*
-			pushMatrix();
-			//translate(blockScale*blockEntry.getKey().x, blockScale*blockEntry.getKey().y);
-			drawBlock2(blockScale*blockEntry.getKey().x, blockScale*blockEntry.getKey().y, blockEntry.getValue() );
-			popMatrix();
-			*/
-			
-			drawBlock2(blockScale*blockEntry.getKey().x, blockScale*blockEntry.getKey().y, blockEntry.getValue());
+			drawBlock(blockScale*blockEntry.getKey().x, blockScale*blockEntry.getKey().y, blockEntry.getValue());
 			
 		}
 		
+		// mark focused block
 		if( blockFocus != null ) {
 			
 			fill(100,0,255,70);
@@ -117,199 +90,33 @@ public class GUI extends PApplet {
 			
 		}
 		
-		// draw current focus
+		// draw new focus, and mark which grid position it can be put at
 		if( newBlockFocus != null) {
 					
-			//drawBlock(mousePos, newBlockFocus);
-			drawBlock2(mouseX - blockScale/2, mouseY - blockScale/2, newBlockFocus);
+			drawBlock(mouseX - blockScale/2, mouseY - blockScale/2, newBlockFocus);
 			fill(100,0,255,70);
 			rect(blockScale*(mousePos.x - 1/2), blockScale*(mousePos.y - 1/2), blockScale, blockScale);
-			//drawBlock2(mouseX, mouseY, newBlockFocus);
+			
 		}
 		
 		
 	}
 	
-	public void drawBlock2(float X, float Y, BuildingBlock block) {
+	public void drawBlock(float X, float Y, BuildingBlock block) {
 		
-		//DataRing<Boolean> connectionRing = block.getConnectionRing();
-		
-		drawBackground2(X,Y);
-		
+		drawBackground(X,Y);
 		fill(120);
-		//stroke(255);
 		pushMatrix();
 		translate(X, Y);
 		block.display();
-		
-		/*
-		if( block.isDiagonal() ){
-			
-			translate(blockScale/2, blockScale/2);
-			rotate(-PI/4);
-			rect(Xoffsets[0] - blockScale/2, Yoffsets[1] - blockScale/2, roadScale, roadScale);
-			
-			for(int i = 0; i < 4; i++) {
-				
-				if( connectionRing.get(i) ) {
-					rect(XoffsetsRotated[i] - blockScale/2, YoffsetsRotated[i] - blockScale/2, roadScaleXRotated[i], roadScaleYRotated[i]);	
-						
-				}
-					
-			}
-			
-		}
-		else {
-			
-			rect(Xoffsets[0], Yoffsets[1], roadScale, roadScale);
-			
-			for(int i = 0; i < 4; i++) {
-				
-				if( connectionRing.get(i) ) {
-					rect(Xoffsets[i], Yoffsets[i], roadScaleX[i], roadScaleY[i]);
-						
-				}
-					
-			}
-			
-			
-			
-		}
-		*/
-		
 		popMatrix();
 			
 	}
-
-	private void drawBlock(Pos pos, BuildingBlock block) {
-		
-		Matrix<Boolean> blockMatrix = block.getConnections();
-		float Xoffset = blockScale*(1 - roadScale)/2;
-		float Yoffset = blockScale*(1 - roadScale)/2;
-		float Xscale = blockScale*roadScale;
-		float Yscale = blockScale*roadScale;
-		// road gray color
-		
-		drawBackground(pos);
-		fill(120);
-		
-		if( block.isDiagonal() ) {
-			
-			pushMatrix();
-			translate(blockScale*pos.x + blockScale/2, blockScale*pos.y + blockScale/2);
-			rotate(PI/4);
-			
-			rect(Xoffset - blockScale/2, Yoffset - blockScale/2, Xscale, Yscale);
-			
-			for(int r = 0; r < blockMatrix.rows(); r++) {
-				
-				boolean connected = blockMatrix.getRowSum(r, Matrix.boolOr);
-				connected = connected || blockMatrix.getColSum(r, Matrix.boolOr);
-				
-				if( connected ) {
-					
-					switch(r) {
-					case(Direction.NORTH):
-						Xoffset = blockScale*(1 - roadScale)/2;
-						Yoffset = - blockScale*(sqrt(2) - 1)/2;
-						Xscale = blockScale*roadScale;
-						Yscale = blockScale*(sqrt(2) - roadScale)/2;
-						break;
-					case(Direction.EAST):
-						Xoffset = blockScale*(1 + roadScale)/2;
-						Yoffset = blockScale*(1 - roadScale)/2;
-						Xscale = blockScale*(sqrt(2) - roadScale)/2;
-						Yscale = blockScale*roadScale;
-						break;
-					case(Direction.SOUTH):
-						Xoffset = blockScale*(1 - roadScale)/2;
-						Yoffset = blockScale*(1 + roadScale)/2;
-						Xscale = blockScale*roadScale;
-						Yscale = blockScale*(sqrt(2) - roadScale)/2;
-						break;
-					case(Direction.WEST):
-						Xoffset = - blockScale*(sqrt(2) - 1)/2;
-						Yoffset = blockScale*(1 - roadScale)/2;
-						Xscale = blockScale*(sqrt(2) - roadScale)/2;
-						Yscale = blockScale*roadScale;
-						break;
-					}
-					
-				}
-				
-				rect(Xoffset - blockScale/2, Yoffset - blockScale/2, Xscale, Yscale);
-				
-			}
-			
-			popMatrix();
-			
-		}
-		else {
 	
-			rect(blockScale*pos.x + Xoffset, blockScale*pos.y + Yoffset, Xscale, Yscale);
-			// Draw the north, east, west, south connections
-			for(int r = 0; r < blockMatrix.rows(); r++) {
-				
-				boolean connected = blockMatrix.getRowSum(r, Matrix.boolOr);
-				connected = connected || blockMatrix.getColSum(r, Matrix.boolOr);
-				
-				if( connected ) {
-					
-					switch(r) {
-					case(Direction.NORTH):
-						Xoffset = blockScale*(1 - roadScale)/2;
-						Yoffset = 0f;
-						Xscale = blockScale*roadScale;
-						Yscale = blockScale*(1 - roadScale)/2;
-						break;
-					case(Direction.EAST):
-						Xoffset = blockScale*(1 + roadScale)/2;
-						Yoffset = blockScale*(1 - roadScale)/2;
-						Xscale = blockScale*(1 - roadScale)/2;
-						Yscale = blockScale*roadScale;
-						break;
-					case(Direction.SOUTH):
-						Xoffset = blockScale*(1 - roadScale)/2;
-						Yoffset = blockScale*(1 + roadScale)/2;
-						Xscale = blockScale*roadScale;
-						Yscale = blockScale*(1 - roadScale)/2;
-						break;
-					case(Direction.WEST):
-						Xoffset = 0f;
-						Yoffset = blockScale*(1 - roadScale)/2;
-						Xscale = blockScale*(1 - roadScale)/2;
-						Yscale = blockScale*roadScale;
-						break;
-					}
-					
-				}
-				
-				rect(blockScale*pos.x + Xoffset, blockScale*pos.y + Yoffset, Xscale, Yscale);
-				
-			}
-			
-		}
-		
-	}
-	
-	
-	private void drawBackground(Pos pos) {
-		
-		fill(backgroundColor[0],backgroundColor[1],backgroundColor[2]);
-		rect(blockScale*pos.x, blockScale*pos.y, blockScale, blockScale);
-		
-	}
-	
-	private void drawBackground2(float X, float Y) {
+	private void drawBackground(float X, float Y) {
 		
 		fill(0,0,0,0);
 		rect(X, Y, blockScale, blockScale);
-		
-	}
-	
-	private void setBlockObj(Pos pos, BlockObject blockObj) {
-		
-		blockMap.put(pos, blockObj);
 		
 	}
 	
@@ -321,8 +128,8 @@ public class GUI extends PApplet {
 	
 	public Pos vecToPos(PVector vec) {
 		
-		int posX = (int) Math.floor(vec.x/blockScale);
-		int posY = (int) Math.floor(vec.y/blockScale);
+		int posX = scaleConverter(vec.x);
+		int posY = scaleConverter(vec.y);
 		return new Pos(posX, posY);
 		
 	}
@@ -335,9 +142,16 @@ public class GUI extends PApplet {
 		
 	}
 	
+	// Scales and snaps to grid
 	public int scaleConverter(float vecScale) {
 		
 		return (int) Math.floor(vecScale/blockScale);
+		
+	}
+	
+	private void setBlockObj(Pos pos, BlockObject blockObj) {
+		
+		blockMap.put(pos, blockObj);
 		
 	}
 	
@@ -345,7 +159,7 @@ public class GUI extends PApplet {
 	
 	public void keyPressed() {
 		
-		// instantiators
+		// instantiate
 		switch(key) {
 		case('q'):
 			//newBlockFocus = blockFactory.getRoad(Direction.EAST,false);
@@ -370,7 +184,7 @@ public class GUI extends PApplet {
 			break;
 		}
 		
-		// modifiers
+		// modify
 		if( newBlockFocus != null ) {
 			
 			blockFocus = null;
@@ -411,16 +225,15 @@ public class GUI extends PApplet {
 		
 		if( newBlockFocus != null) {
 	
-			//Pos mousePos = new Pos(mouseX, mouseY);
 			Pos mousePos = XYtoPos(mouseX, mouseY);
 			blockMap.put(mousePos, newBlockFocus);
 			blockFocus = newBlockFocus;
 			newBlockFocus = null;
 			System.out.println(blockFocus);
+			
 		}
 		else {
 			
-			//Pos mousePos = new Pos(mouseX, mouseY);
 			Pos mousePos = XYtoPos(mouseX, mouseY);
 			blockFocus = blockMap.getValue(mousePos);
 			System.out.println(blockFocus);
@@ -430,7 +243,7 @@ public class GUI extends PApplet {
 	}
 	
 	
-	////// BUILDING BLOCK TESTING ////////
+	////// BUILDING BLOCK DISPLAY METHODS ////////
 	
 	public void displayBlock(DataRing<Boolean> connectionRing, boolean diagonal) {
 		
@@ -451,9 +264,6 @@ public class GUI extends PApplet {
 				}
 				
 			}
-			
-			//rotate(-PI/4);
-			//translate(- blockScale/2, - blockScale/2);
 			
 		}
 		else {
@@ -508,9 +318,6 @@ public class GUI extends PApplet {
 				
 				
 			}
-			
-			//rotate(-PI/4);
-			//translate(- blockScale/2, - blockScale/2);
 			
 		}
 		else {

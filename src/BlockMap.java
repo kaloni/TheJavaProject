@@ -3,20 +3,38 @@ import java.util.Map;
 import java.util.Set;
 
 
-public class BlockMap<K,V> extends HashMap {
+public class BlockMap<K,V> extends HashMap<K, V> {
 	
+	// Use dummies as default returns instead of casting new objects
 	private K dummyKey;
 	private V dummyValue;
+	private Map.Entry<K, V> dummyEntry;
 	
 	public BlockMap(K dummyKey, V dummyValue) {
 		
 		this.dummyKey = dummyKey;
 		this.dummyValue = dummyValue;
+		put(dummyKey, dummyValue);
+		dummyEntry = getEntry(dummyValue);
 		
 	}
 
 	// TODO : BlockMap should be parametrized with BlockObject instead of BuildingBlock anyways...
 	public void put(Pos pos, BlockObject blockObj) {
+		
+	}
+	
+	// override put to ensure a one-to-one relationship between keys and values
+	@Override
+	public V put(K key, V value) {
+		
+		if( !containsKey(key) ) {
+			super.put(key, value);
+			return value;
+		}
+		// else
+		return getValue(key);
+		
 		
 	}
 	
@@ -74,7 +92,7 @@ public class BlockMap<K,V> extends HashMap {
 			
 		}
 		
-		return (Map.Entry<K, V>) new Object();
+		return dummyEntry;
 		
 	}
 	

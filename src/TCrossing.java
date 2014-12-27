@@ -8,6 +8,8 @@ public class TCrossing extends BuildingBlock {
 		BuildingBlock tempT_crossing;
 		BuildingBlock curve;
 		BuildingBlock road =  new Road(dirRoad, redLight, gui);
+		
+		// if fork means if the curve part is going to be pointing away from the road part
 		if( fork ) {
 			curve = new Curve(dirRoad, curveBend, redLight, gui);
 		}
@@ -32,6 +34,7 @@ public class TCrossing extends BuildingBlock {
 		
 	}
 	
+	@Override
 	public void display() {
 		
 		gui.displayBlock(connectionRing, diagonal);
