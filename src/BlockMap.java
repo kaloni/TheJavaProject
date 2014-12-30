@@ -10,6 +10,14 @@ public class BlockMap<K,V> extends HashMap<K, V> {
 	private V dummyValue;
 	private Map.Entry<K, V> dummyEntry;
 	
+	/////////// CONSTRUCTORS (2) ///////////
+	
+	
+	public BlockMap() {
+		super();
+	}
+	
+	
 	public BlockMap(K dummyKey, V dummyValue) {
 		
 		this.dummyKey = dummyKey;
@@ -18,13 +26,10 @@ public class BlockMap<K,V> extends HashMap<K, V> {
 		dummyEntry = getEntry(dummyValue);
 		
 	}
-
-	// TODO : BlockMap should be parametrized with BlockObject instead of BuildingBlock anyways...
-	public void put(Pos pos, BlockObject blockObj) {
-		
-	}
 	
-	// override put to ensure a one-to-one relationship between keys and values
+	/////////// ///////// //////////
+	
+	// override put to ensure a one cannot put blocks on other blocks
 	@Override
 	public V put(K key, V value) {
 		
@@ -33,7 +38,7 @@ public class BlockMap<K,V> extends HashMap<K, V> {
 			return value;
 		}
 		// else
-		return getValue(key);
+		return null;
 		
 		
 	}

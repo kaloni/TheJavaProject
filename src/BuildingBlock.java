@@ -10,11 +10,16 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	protected Matrix<Boolean> stateMatrix; // describes inner connectivity in a specific state
 	protected Matrix<Boolean> connectionMatrix; // Holds the set of accessible states = sum(all state matrices);
 	protected DataRing<Boolean> connectionRing;
+	protected DataRing<Boolean> inputRing;
+	protected DataRing<Boolean> outputRing;
 	protected List<Matrix<Boolean>> stateList; // holds different possible states
 	protected Matrix<Float> flowMatrix; // describes the inner flow of the building block
 	protected int speedLimit;
 	protected int dir;
+	protected int bend; // bend = +-1
+	protected boolean redLight;
 	protected boolean diagonal;
+	protected Pos groupOrigin;
 	
 	protected GUI gui;
 	
@@ -27,22 +32,29 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		stateNum = 0;
 		maxState = 0;
 		connectionMatrix =  new Matrix<>(4,4,false);
+		connectionRing = new DataRing<>(4);
+		inputRing = new DataRing<>(4);
+		outputRing = new DataRing<>(4);
 		stateList = new ArrayList<>();
 		diagonal = false;
-		connectionRing = new DataRing<>(4);
+		groupOrigin = new Pos(0,0);
 		
 	}
 	
-	public BuildingBlock(int dir) {
+	public BuildingBlock(int dir, GUI gui) {
 		
+		this.gui = gui;
 		this.dir = dir;
 		// Ground state
 		stateNum = 0;
 		maxState = 0;
 		connectionMatrix =  new Matrix<>(4,4,false);
+		connectionRing = new DataRing<>(4);
+		inputRing = new DataRing<>(4);
+		outputRing = new DataRing<>(4);
 		stateList = new ArrayList<>();
 		diagonal = false;
-		connectionRing = new DataRing<>(4);
+		groupOrigin = new Pos(0,0);
 		
 	}
 	
@@ -97,6 +109,8 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 		for(int r = 0; r < 4; r++) {
 			connectionRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr) || connectionMatrix.getColSum(r, Matrix.boolOr));
+			inputRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr));
+			outputRing.set(r, connectionMatrix.getColSum(r, Matrix.boolOr));
 		}
 		
 	}
@@ -104,7 +118,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	////////// ////////// //////////
 	
 	// max compares blocks by their amount of states
-	static BuildingBlock max(BuildingBlock... blocks) {
+	public static BuildingBlock max(BuildingBlock... blocks) {
 		
 		// Create smallest possible block (according to compareTo)
 		BuildingBlock maxBlock = new BuildingBlock();
@@ -120,6 +134,20 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 	}
 	
+	public BuildingBlock clone() {
+		
+		BuildingBlock blockClone = new BuildingBlock(dir, gui);
+		
+		for(Matrix<Boolean> stateMatrix : stateList) {
+			
+			blockClone.addState(stateMatrix.clone());
+			
+		}
+		
+		return blockClone;
+		
+	}
+	
 	public int compareTo(BuildingBlock block) {
 		
 		int otherMaxState = block.maxState();
@@ -130,10 +158,26 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 	}
 	
+	public Pos getGroupOrigin() {
+		
+		return groupOrigin;
+		
+	}
+	
+	public void translateGroupOrigin(Pos groupOrigin) {
+		
+		this.groupOrigin = groupOrigin;
+		
+	}
+	
 	// this is only to ensure that one can call display on an arbitrary BuildingBlock
 	// Implementation is given in each subclass
-	public void display() {
-		
+	public void display(Pos groupOffset) {
+		gui.displayBlock(groupOffset, inputRing, outputRing, diagonal);
+	}
+	
+	public void displayEdit(Pos groupOffset) {
+		gui.displayBlockEdit(groupOffset, connectionMatrix, inputRing, outputRing, diagonal);
 	}
 	
 	public boolean isDiagonal() {
@@ -144,7 +188,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		diagonal = bool;
 	}
 	
-	public int getDir() {
+	public int dir() {
 		return dir;
 	}
 	
@@ -239,6 +283,12 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	public DataRing<Boolean> getConnectionRing() {
 		return connectionRing;
 	}
+	public DataRing<Boolean> getInputRing() {
+		return inputRing;
+	}
+	public DataRing<Boolean> getOutputRing() {
+		return outputRing;
+	}
 	
 	public int maxState() {
 		return maxState;
@@ -265,15 +315,18 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 			// bend the inner direction when rotating
 			dir = Direction.dirBend(dir,+1);
 			connectionRing.cycle(-1);
+			inputRing.cycle(-1);
+			outputRing.cycle(-1);
 			
 		}
 		
 		diagonal = !diagonal;
-	
+		
 	}
 	
 	// flip block around the blocks axis
 	public void flip() {
+		
 		
 		//flip each state
 		for( Matrix<Boolean> stateMatrix : stateList ) {
@@ -282,6 +335,21 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 		connectionMatrix.exchange(dir);
 		connectionRing.constraintCycle( (dir % 2) == 0 ? DataRing.intOdd : DataRing.intEven);
+		inputRing.constraintCycle( (dir % 2) == 0 ? DataRing.intOdd : DataRing.intEven);
+		outputRing.constraintCycle( (dir % 2) == 0 ? DataRing.intOdd : DataRing.intEven);
+		
+	}
+	
+	public void flip(int axis) {
+		
+		for( Matrix<Boolean> stateMatrix : stateList ) {
+			stateMatrix.exchange(axis);
+		}
+				
+		connectionMatrix.exchange(axis);
+		connectionRing.constraintCycle( (axis % 2) == 0 ? DataRing.intOdd : DataRing.intEven);
+		inputRing.constraintCycle( (dir % 2) == 0 ? DataRing.intOdd : DataRing.intEven);
+		outputRing.constraintCycle( (dir % 2) == 0 ? DataRing.intOdd : DataRing.intEven);
 		
 	}
 	
@@ -291,6 +359,8 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		for( Matrix<Boolean> stateMatrix : stateList ) {
 			stateMatrix.transpose();
 		}
+		connectionMatrix.transpose();
+		updateRing();
 		
 	}
 	

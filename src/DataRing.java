@@ -199,6 +199,20 @@ public class DataRing<E> {
 		
 	}
 	
+	public DataRing<E> clone() {
+		
+		DataRing<E> tempRing = new DataRing<>();
+		
+		for(int i = 0; i < size; i++) {
+			
+			tempRing.add(i, get(i));
+			
+		}
+		
+		return tempRing;
+		
+	}
+	
 	@Override
 	public String toString() {
 		

@@ -37,9 +37,12 @@ public class Direction {
 	public static int posToDir(Pos pos) {
 		// if WEST-EAST binding : x --> 1 - x
 		// if NORTH-SOUTH binding : x --> x % 4
-		return ( pos.x == 0 ) ? (1 - pos.y) : ( dirBend(pos.x, 0) );
+		//return ( pos.x == 0 ) ? (1 - pos.y) : ( dirBend(pos.x, 0) );
+		return ( pos.x == 0 ) ? (1 + pos.y) : ( dirBend(pos.x, 0) );
 		
 	}
+	
+
 	
 	// returns the "arrow" Pos corresponding to the specified direction dir
 	public static Pos dirToPos(int dir) {

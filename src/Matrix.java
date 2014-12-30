@@ -1,5 +1,8 @@
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
-public class Matrix<E> {
+
+public class Matrix<E> implements Iterable<E> {
 	
 	private E[][] innerMatrix;
 	private int rows;
@@ -61,6 +64,41 @@ public class Matrix<E> {
 	public static BinaryOperation<Float> floatMult= (a,b) -> a * b;
 	
 	///////////////////////////////////////////////////////////////////////
+	
+	public MatrixIterator iterator() {
+		return new MatrixIterator();
+	}
+	
+	class MatrixIterator implements Iterator<E> {
+		
+		int matrixSize = rows*cols -1;
+		
+		private int currentIndex;
+		
+		MatrixIterator() {
+			currentIndex = -1;
+		}
+		
+		public boolean hasNext() {
+			
+			if( currentIndex < matrixSize ) {
+				return true;
+			}
+			return false;
+		}
+		
+		public E next() throws NoSuchElementException {
+			if( hasNext() ) {
+				currentIndex++;
+				return innerMatrix[currentIndex/cols % rows][currentIndex % cols];
+			}
+			else {
+				throw new NoSuchElementException();
+			}
+		}
+		
+	}
+	
 	
 	public int rows() {
 		return rows;
@@ -241,6 +279,33 @@ public class Matrix<E> {
 		}
 	}
 	
+	public Matrix<Float> floatMult(Float number) {
+		
+		Matrix<Float> tempMatrix = new Matrix<>(rows, cols);
+		
+		if( get(0,0) instanceof Float ) {
+						
+			for(int r = 0; r < rows; r++) {
+				for(int c = 0; c < cols; c++) {
+					tempMatrix.set(r, c, number*( (Float) get(r,c) ) );
+				}
+			}
+			
+		}
+		else if( get(0,0) instanceof Integer ) {
+			
+			for(int r = 0; r < rows; r++) {
+				for(int c = 0; c < cols; c++) {
+					tempMatrix.set(r, c, number*( (Integer) get(r,c) ) );
+				}
+			}
+			
+		}
+		
+		return tempMatrix;
+		
+	}
+	
 	// anti-clockwise rotation of matrix
 	public void rotate() {
 		
@@ -368,6 +433,36 @@ public class Matrix<E> {
 	
 	
 	///////// HELPER METHODS ////////
+	
+	// Returns a DataRing structure version of this matrix, made row wise
+	public DataRing<E> toDataRing() {
+		
+		DataRing<E> tempRing = new DataRing<E>();
+		
+		for(int r = 0; r < rows; r++) {
+			for(int c = 0; c < cols; c++) {
+				tempRing.add(r*cols+c, get(r,c));
+			}
+		}
+		
+		return tempRing;
+		
+	}
+	
+	// returns a matrix with a incrementing sequence of integers, filling in row by row
+	public static Matrix<Integer> newIndexMatrix(int rows, int cols) {
+		
+		Matrix<Integer> indexMatrix = new Matrix<>(rows, cols);
+		
+		for(int r = 0; r < rows; r++) {
+			for(int c = 0; c < cols; c++) {
+				indexMatrix.set(r, c, r*cols + c);
+			}
+		}
+		
+		return indexMatrix;
+		
+	}
 	
 	// makes an array version copy of the matrix
 	public static <T> T[][] toArray(Matrix<T> matrix) {

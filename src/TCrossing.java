@@ -1,6 +1,9 @@
 
 public class TCrossing extends BuildingBlock {
 
+	private int bend;
+	private boolean fork;
+	
 	public TCrossing(int dirRoad, int curveBend, boolean fork,  boolean redLight, GUI gui) {
 		
 		this.gui = gui;
@@ -31,13 +34,41 @@ public class TCrossing extends BuildingBlock {
 		addStateList(tempT_crossing.getStateList());
 		
 		dir = dirRoad;
+		bend = curveBend;
+		this.redLight = redLight;
+		this.fork = fork;
 		
 	}
 	
 	@Override
-	public void display() {
+	public void flip() {
 		
-		gui.displayBlock(connectionRing, diagonal);
+		super.flip();
+		bend = -bend;
+		
+	}
+	
+	@Override
+	public void flip(int axis) {
+		
+		super.flip();
+		bend = -bend;
+		
+	}
+	
+	@Override
+	public TCrossing clone() {
+		
+		TCrossing TCrossingClone = new TCrossing(dir, bend, fork, redLight, gui);
+		TCrossingClone.setDiagonal(diagonal);
+		
+		for(Matrix<Boolean> stateMatrix : stateList) {
+			
+			TCrossingClone.addState(stateMatrix.clone());
+			
+		}
+		
+		return TCrossingClone;
 		
 	}
 

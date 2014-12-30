@@ -1,13 +1,15 @@
 
 public class Crossing extends BuildingBlock {
-
-	public Crossing(int dirX, int dirY, boolean redLight, GUI gui) {
+	
+	public Crossing(int dir, int bend, boolean redLight, GUI gui) {
 		
 		this.gui = gui;
+		this.dir = dir;
+		this.bend = bend;
 		
 		BuildingBlock tempCrossing;
-		BuildingBlock road1 = new Road(dirX, redLight, gui);
-		BuildingBlock road2 = new Road(dirY, redLight, gui);
+		BuildingBlock road1 = new Road(dir, redLight, gui);
+		BuildingBlock road2 = new Road(Direction.dirBend(dir, bend), redLight, gui);
 		
 		if( redLight ) {
 			// add the roads together to get an alternating redLight switch function
@@ -23,14 +25,21 @@ public class Crossing extends BuildingBlock {
 		
 		addStateList(tempCrossing.getStateList());
 		
-		dir = dirX;
-		
 	}
-
+	
 	@Override
-	public void display() {
+	public Crossing clone() {
 		
-		gui.displayBlock(connectionRing, diagonal);
+		Crossing crossingClone = new Crossing(dir, bend, redLight, gui);
+		crossingClone.setDiagonal(diagonal);
+		
+		for(Matrix<Boolean> stateMatrix : stateList) {
+			
+			crossingClone.addState(stateMatrix.clone());
+			
+		}
+		
+		return crossingClone;
 		
 	}
 	
