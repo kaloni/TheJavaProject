@@ -253,7 +253,7 @@ public class Matrix<E> implements Iterable<E> {
 	
 	 // Generic matrix multiplication, returns this if dimensions mismatch
 	 // Returns this is dimensions mismatch
-	public Matrix<E> matrixMult(Matrix<E> matrix, BinaryOperation opAdd, BinaryOperation opMult) {
+	public Matrix<E> matrixMult(Matrix<E> matrix, BinaryOperation<E> opAdd, BinaryOperation<E> opMult) {
 		
 		if( cols == matrix.rows() ) {
 			

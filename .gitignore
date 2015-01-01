@@ -1,0 +1,7 @@
+# idea
+.idea/
+*.iml
+# generated files
+bin/
+out/
+database/

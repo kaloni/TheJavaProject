@@ -1,3 +1,7 @@
+import server.Server;
+import view.LoginForm;
+
+import java.io.IOException;
 import java.util.Random;
 
 
@@ -61,8 +65,18 @@ public class Main {
 		Matrix<Boolean> symBoolMatrix1 = new Matrix<>(symBoolArray);
 		Matrix<Boolean> symBoolMatrix2 = new Matrix<>(symBoolArray2);
 		Matrix<Boolean> boolOpMatrix = symBoolMatrix1.directOp(symBoolMatrix2, Matrix.boolOr);
-		
-		
+
+		Server server;
+		try {
+			server = new Server();
+			server.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		LoginForm loginForm = new LoginForm();
+		loginForm.setVisible(true);
+
 		
 		
 	}
