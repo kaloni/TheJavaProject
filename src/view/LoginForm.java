@@ -1,6 +1,7 @@
 package view;
 
 import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 import server.Server;
 import util.Network;
 
@@ -11,7 +12,10 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 
 
 public class LoginForm extends JFrame {
@@ -22,6 +26,8 @@ public class LoginForm extends JFrame {
 
     JTextField usernameField;
     JPasswordField passwordField;
+
+    private LoginListener loginListener;
 
     public LoginForm() {
         super();
@@ -79,14 +85,20 @@ public class LoginForm extends JFrame {
         this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
     }
 
+    private void showAlertDialog(String title, String message) {
+        JOptionPane.showMessageDialog(this,
+                message,
+                title,
+                JOptionPane.PLAIN_MESSAGE);
+    }
 
-    private void showDialog(String str){
+    private void showProgressDialog(String str) {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.add(new JLabel(str + "\n"+" please Wait..."), new GridBagConstraints());
+        panel.add(new JLabel(str + "\n" + " please Wait..."), new GridBagConstraints());
         dialog = new JDialog();
         dialog.getContentPane().removeAll();
         dialog.getContentPane().add(panel);
-        dialog.setSize(200  , 100);
+        dialog.setSize(200, 100);
         dialog.setLocationRelativeTo(LoginForm.this);
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         dialog.setModal(true);
@@ -104,8 +116,8 @@ public class LoginForm extends JFrame {
         public void actionPerformed(ActionEvent e) {
             System.out.println("username: " + usernameField.getText() + ", password: " + passwordField.getText());
 
-            Thread t = new Thread(){
-                public void run(){
+            Thread t = new Thread() {
+                public void run() {
                     try {
                         URI uri = Network.loginUriCreator(serverIpField.getText(),
                                 Integer.valueOf(serverPortField.getText()),
@@ -120,13 +132,30 @@ public class LoginForm extends JFrame {
                         IOUtils.copy(is, writer);
                         String response = writer.toString();
 
+                        JSONObject jsonObject = new JSONObject(response);
                         System.out.println(response);
+
+                        String responseValue = jsonObject.getString("response");
+
+                        boolean loginSuccessfully;
+                        if (responseValue.compareTo("OK") ==0) {
+                            showAlertDialog("Login", "Login successful!");
+                            loginSuccessfully = true;
+                        } else {
+                            String reasonValue = jsonObject.getString("reason");
+                            showAlertDialog("Login", "Login Failed!\n" + reasonValue);
+                            loginSuccessfully = false;
+                        }
+
+                        if (loginListener != null) {
+                            loginListener.login(loginSuccessfully);
+                        }
                     } catch (URISyntaxException | IOException e1) {
                         e1.printStackTrace();
                     }
 
-                    SwingUtilities.invokeLater(new Runnable(){//do swing work on EDT
-                        public void run(){
+                    SwingUtilities.invokeLater(new Runnable() {//do swing work on EDT
+                        public void run() {
                             hideDialog();
                         }
                     });
@@ -134,7 +163,7 @@ public class LoginForm extends JFrame {
             };
             t.start();
 
-            showDialog("Login in...");
+            showProgressDialog("Login in...");
 
         }
     };
@@ -144,8 +173,8 @@ public class LoginForm extends JFrame {
         public void actionPerformed(ActionEvent e) {
             System.out.println("username: " + usernameField.getText() + ", password: " + passwordField.getText());
 
-            Thread t = new Thread(){
-                public void run(){
+            Thread t = new Thread() {
+                public void run() {
                     try {
                         URI uri = Network.signUpUriCreator(serverIpField.getText(),
                                 Integer.valueOf(serverPortField.getText()),
@@ -160,13 +189,15 @@ public class LoginForm extends JFrame {
                         IOUtils.copy(is, writer);
                         String response = writer.toString();
 
+                        showAlertDialog("Signup", response);
                         System.out.println(response);
+
                     } catch (URISyntaxException | IOException e1) {
                         e1.printStackTrace();
                     }
 
-                    SwingUtilities.invokeLater(new Runnable(){//do swing work on EDT
-                        public void run(){
+                    SwingUtilities.invokeLater(new Runnable() {//do swing work on EDT
+                        public void run() {
                             hideDialog();
                         }
                     });
@@ -174,10 +205,14 @@ public class LoginForm extends JFrame {
             };
             t.start();
 
-            showDialog("Signing up...");
+            showProgressDialog("Signing up...");
 
         }
     };
+
+    public void setLoginListener(LoginListener loginListener) {
+        this.loginListener = loginListener;
+    }
 
 
     private static SpringLayout.Constraints getConstraintsForCell(
@@ -242,4 +277,11 @@ public class LoginForm extends JFrame {
         pCons.setConstraint(SpringLayout.SOUTH, y);
         pCons.setConstraint(SpringLayout.EAST, x);
     }
+
+    public interface LoginListener {
+        void login(boolean loginSuccessful);
+    }
 }
+
+
+
