@@ -83,8 +83,11 @@ public class Server {
                     String response;
 
                     if (query.containsKey("username") && query.containsKey("password")) {
-                        DatabaseHelper.signUp(query.get("username"), query.get("password"));
-                        response = new JSONObject().setString("response", "OK").toString();
+                        if (DatabaseHelper.signUp(query.get("username"), query.get("password"))) {
+                            response = new JSONObject().setString("response", "OK").toString();
+                        } else {
+                            response = new JSONObject().setString("response", "failed").setString("reason", "user already registered!").toString();
+                        }
                     } else {
                         response = new JSONObject().setString("response", "failed").setString("reason", "missing params").toString();
                     }
