@@ -30,21 +30,32 @@ public class Network {
 
 
     public static URI loginUriCreator(String server, int port, String username, String password) throws URISyntaxException {
-        List<BasicNameValuePair> qparams = new ArrayList<>();
+        List<BasicNameValuePair> params = new ArrayList<>();
 
         if (username != null && !username.isEmpty()) {
-            qparams.add(new BasicNameValuePair("username", username));
+            params.add(new BasicNameValuePair("username", username));
         }
 
         if (password != null && !password.isEmpty()) {
-            qparams.add(new BasicNameValuePair("password", password));
+            params.add(new BasicNameValuePair("password", password));
         }
 
         return URIUtils.createURI("http", server, port, "/login",
-                URLEncodedUtils.format(qparams, "UTF-8"), null);
+                URLEncodedUtils.format(params, "UTF-8"), null);
     }
 
     public static URI signUpUriCreator(String server, int port, String username, String password) throws URISyntaxException {
-        return loginUriCreator(server, port, username, password);
+        List<BasicNameValuePair> params = new ArrayList<>();
+
+        if (username != null && !username.isEmpty()) {
+            params.add(new BasicNameValuePair("username", username));
+        }
+
+        if (password != null && !password.isEmpty()) {
+            params.add(new BasicNameValuePair("password", password));
+        }
+
+        return URIUtils.createURI("http", server, port, "/signup",
+                URLEncodedUtils.format(params, "UTF-8"), null);
     }
 }

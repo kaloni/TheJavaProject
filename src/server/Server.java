@@ -6,11 +6,15 @@ import com.sun.net.httpserver.HttpServer;
 import sun.net.www.protocol.http.HttpURLConnection;
 import util.Parser;
 
+import org.iq80.leveldb.*;
+import static org.iq80.leveldb.impl.Iq80DBFactory.*;
+import java.io.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.Executors;
+
 
 public class Server {
 
@@ -29,7 +33,6 @@ public class Server {
         server.start();
     }
 
-
     static class LoginHandler implements HttpHandler {
         public void handle(HttpExchange httpExchange) throws IOException {
 
@@ -42,8 +45,11 @@ public class Server {
                     String response;
 
                     if (query.containsKey("username") && query.containsKey("password")) {
-                        response = "Login: OK";
-                        //todo verify username & password
+                        if (DatabaseHelper.loginSuccessful(query.get("username"), query.get("password") )) {
+                            response = "Login: OK";
+                        } else {
+                            response = "Login: Failed";
+                        }
                     } else {
                         response = "Missing params";
                     }
@@ -76,6 +82,7 @@ public class Server {
                     String response;
 
                     if (query.containsKey("username") && query.containsKey("password")) {
+                        DatabaseHelper.signUp(query.get("username"), query.get("password"));
                         response = "Sign Up: OK";
                         //todo sign up processing. record the username & password to a file
                     } else {
