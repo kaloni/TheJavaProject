@@ -3,5 +3,12 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="lib" path="/Users/Carl/Documents/Plugg/Java/JARS/core.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="lib/core.jar"/>
+	<classpathentry kind="lib" path="lib/guava-18.0.jar"/>
+	<classpathentry kind="lib" path="lib/httpclient-4.3.6.jar"/>
+	<classpathentry kind="lib" path="lib/httpcore-4.4.jar"/>
+	<classpathentry kind="lib" path="lib/leveldb-0.7.jar"/>
+	<classpathentry kind="lib" path="lib/leveldb-api-0.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

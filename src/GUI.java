@@ -1,5 +1,7 @@
 import java.awt.event.MouseEvent;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -16,6 +18,8 @@ public class GUI extends PApplet {
 	// TODO : Window dimensions in pixels --> pixel-free?
 	public final int[] backgroundColor = {0,180,0};
 	public final int[] editModeBackgroundColor =  {0, 0, 0,};
+	public final int[] clockColor = {128, 255, 0};
+	public final int[] effectColor = {204, 204, 0};
 	
 	private int width;
 	private int height;
@@ -96,10 +100,17 @@ public class GUI extends PApplet {
 	private DataRing<Float> editBendedDiagonalArrowMapX;
 	private DataRing<Float> editBendedDiagonalArrowMapY;
 	
+	//// EDIT MODIFIERS ////
+	
+	private HashMap<BlockGroup, Clock> clockMap;
+	private HashMap<BlockGroup, Effect> effectMap;
+	private List<Clock> clockList;
+	private List<Effect> effectList;
+	
 	///////// ////////// ///////////
 	
 	// TODO : implement the panel
-	private JPanel blockPanel;
+	private SidePanel sidePanel;
 	
 	public void setup() {
 		
@@ -168,6 +179,11 @@ public class GUI extends PApplet {
 		
 		noStroke();
 		
+		// effects //
+		Clock masterClock = new Clock(new PVector(0,0), 100);
+		clockList = new ArrayList<>();
+		clockList.add(masterClock);
+		
 	}
 	
 	public void draw() {
@@ -230,9 +246,9 @@ public class GUI extends PApplet {
 			}
 			
 			scale(editGlobalScale);
-			translate(editBlockScale*(editGlobalOffset.x - editBounds[0].x), editBlockScale*(editGlobalOffset.y - editBounds[0].y));
-			
 			background(editModeBackgroundColor[0], editModeBackgroundColor[1], editModeBackgroundColor[2]);
+			drawEditClocks();
+			translate(editBlockScale*(editGlobalOffset.x - editBounds[0].x), editBlockScale*(editGlobalOffset.y - editBounds[0].y));
 			
 			for(Map.Entry<Pos, BlockGroup> groupEntry : focusSet) {
 				
@@ -335,6 +351,51 @@ public class GUI extends PApplet {
 		
 	}
 	
+	public void drawEditClocks() {
+		
+		noFill();
+		
+		for(Clock clock : clockList) {
+			translate(editBlockScale*clock.pos().x, editBlockScale*clock.pos().y);
+			drawClock(clock);
+			clock.count();
+			translate(- editBlockScale*clock.pos().x, - editBlockScale*clock.pos().y);
+		}
+		
+		noStroke();
+		
+	}
+	
+	public void drawClock(Clock clock) {
+		
+		stroke(clockColor[0], clockColor[1], clockColor[2]);
+		rect(clock.pos().x, clock.pos().y, editBlockScale, editBlockScale);
+		stroke(255);
+		translate(editBlockScale/2, editBlockScale/2);
+		ellipse(0, 0, editBlockScale, editBlockScale);
+		drawArrow(0, 0, editBlockScale*sin( 2*PI*((float) clock.time())/clock.switchTime() )/2, - editBlockScale*cos( 2*PI*((float) clock.time())/clock.switchTime() )/2 );
+		translate(- editBlockScale/2, - editBlockScale/2);
+		System.out.println(clock.time());
+		
+	}
+	
+	public void drawEditEffects() {
+		
+		for(Effect effect : effectList) {
+			
+			drawEffect(effect);
+			
+		}
+		
+	}
+	
+	public void drawEffect(Effect effect) {
+		
+		fill(effectColor[0], effectColor[1], effectColor[2]);
+		rect(effect.pos().x, effect.pos().y, editBlockScale, editBlockScale);
+		
+	}
+	
 	public void drawGroupEdit(float X, float Y, BlockGroup blockGroup) {
 		
 		drawBackground(X,Y);
@@ -343,7 +404,6 @@ public class GUI extends PApplet {
 		fill(0);
 		blockGroup.displayEdit();
 		translate(-X, -Y);
-		
 		
 		
 	}
@@ -601,7 +661,6 @@ public class GUI extends PApplet {
 						for(Map.Entry<Pos, BlockGroup> groupFocus : focusSet) {
 							
 							mapSet.remove(groupFocus);
-							
 						}
 						currentFocus = null;
 						focusMap.clear();
@@ -735,7 +794,13 @@ public class GUI extends PApplet {
 		buildMousePos = editMousePos.add(editLocalOffset);
 		System.out.println(editMousePos + " " + editBounds[1].sub(editLocalOffset));
 		//if( editMousePos.compareTo(editGlobalOffset) >= 0 && editMousePos.compareTo(editBounds[1].sub(editLocalOffset)) <= 0 ) {
+		
+		
+		if( mouseButton == RIGHT ) {
 			
+			
+			
+		}
 		if( focusMap.containsKey(buildMousePos) ) {
 				
 			if( (keyPressed && keyCode == SHIFT) ) {

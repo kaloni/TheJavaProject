@@ -216,6 +216,10 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		}
 	}
 	
+	public int currentStateNumber() {
+		return stateNum;
+	}
+	
 	public List<Matrix<Boolean>> getStateList() {
 		return stateList;
 	}

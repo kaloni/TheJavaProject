@@ -1,11 +1,14 @@
 import server.Server;
 import view.LoginForm;
 
+import java.awt.BorderLayout;
 import java.io.IOException;
 import java.util.Random;
 
+import javax.swing.JFrame;
 
-public class Main {
+
+public class Main extends JFrame {
 	
 	/*
 	 * Use Main for testing
@@ -15,7 +18,9 @@ public class Main {
 
 	public static void main(String[] args) {
 		
+		GameFrame game = new GameFrame();
 		
+		/*
 		int rows = 4;
 		int cols = 4;
 		
@@ -76,9 +81,10 @@ public class Main {
 
 		LoginForm loginForm = new LoginForm();
 		loginForm.setVisible(true);
-
+		 */
 		
 		
 	}
+	
 
 }

@@ -70,6 +70,16 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		focused = bool;
 	}
 	
+	public void changeState() {
+		
+		for(BuildingBlock block : values()) {
+			
+			block.setState( (block.currentStateNumber() + 1) %  block.maxState);
+			
+		}
+		
+	}
+	
 	public BuildingBlock put(Pos pos, BuildingBlock block) {
 		
 		BuildingBlock returnBlock = super.put(pos, block);
