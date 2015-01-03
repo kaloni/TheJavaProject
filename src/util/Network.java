@@ -1,7 +1,7 @@
 package util;
 
 
-import com.sun.xml.internal.xsom.impl.util.Uri;
+//import com.sun.xml.internal.xsom.impl.util.Uri;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;

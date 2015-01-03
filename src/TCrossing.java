@@ -3,6 +3,7 @@ public class TCrossing extends BuildingBlock {
 
 	private int bend;
 	private boolean fork;
+	private boolean reverted;
 	
 	public TCrossing(int dirRoad, int curveBend, boolean fork,  boolean redLight, GUI gui) {
 		
@@ -40,6 +41,10 @@ public class TCrossing extends BuildingBlock {
 		
 	}
 	
+	public void setReverted(boolean reverted) {
+		this.reverted = reverted;
+	}
+	
 	@Override
 	public void flip() {
 		
@@ -57,10 +62,21 @@ public class TCrossing extends BuildingBlock {
 	}
 	
 	@Override
+	public void revert() {
+		
+		super.revert();
+		reverted = !reverted;
+		fork = !fork;
+		bend = -bend;
+		
+	}
+	
+	@Override
 	public TCrossing clone() {
 		
 		TCrossing TCrossingClone = new TCrossing(dir, bend, fork, redLight, gui);
 		TCrossingClone.setDiagonal(diagonal);
+		TCrossingClone.setReverted(reverted);
 		
 		for(Matrix<Boolean> stateMatrix : stateList) {
 			

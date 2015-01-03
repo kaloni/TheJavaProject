@@ -6,12 +6,12 @@ import processing.core.PVector;
 
 public class Clock {
 
-	private PVector pos;
+	private Pos pos;
 	private int switchTime;
 	private int time;
 	private List<BlockGroup> blockLinkList;
 	
-	public Clock(PVector pos, int switchTime) {
+	public Clock(Pos pos, int switchTime) {
 		
 		this.pos = pos;
 		this.switchTime = switchTime;
@@ -20,7 +20,7 @@ public class Clock {
 	}
 	
 	
-	public PVector pos() {
+	public Pos pos() {
 		return pos;
 	}
 	
@@ -45,6 +45,20 @@ public class Clock {
 	
 	public void setSwitchTime(int switchTime) {
 		this.switchTime = switchTime;
+	}
+	
+	public void addLink(BlockGroup block) {
+		
+		if( ! blockLinkList.contains(block) ) {
+			blockLinkList.add(block);
+		}
+		
+	}
+	
+	public void removeLink(BlockGroup block) {
+		
+		blockLinkList.remove(block);
+		
 	}
 
 }

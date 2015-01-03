@@ -102,10 +102,14 @@ public class GUI extends PApplet {
 	
 	//// EDIT MODIFIERS ////
 	
-	private HashMap<BlockGroup, Clock> clockMap;
-	private HashMap<BlockGroup, Effect> effectMap;
+	private HashMap<Pos, Clock> clockMap;
+	private HashMap<Pos, Effect> effectMap;
+	private HashMap<BlockGroup, Clock> clockLinkMap;
 	private List<Clock> clockList;
 	private List<Effect> effectList;
+	private Clock clockFocus;
+	private boolean newClockLink;
+	private List<BlockGroup> blockChangedStateList;
 	
 	///////// ////////// ///////////
 	
@@ -180,9 +184,16 @@ public class GUI extends PApplet {
 		noStroke();
 		
 		// effects //
-		Clock masterClock = new Clock(new PVector(0,0), 100);
+		clockMap = new HashMap<Pos, Clock>();
+		effectMap = new HashMap<Pos, Effect>();
+		clockLinkMap = new HashMap<BlockGroup, Clock>();
+		blockChangedStateList = new ArrayList<>();
+		
+		Clock masterClock = new Clock(new Pos(0,0), 100);
 		clockList = new ArrayList<>();
 		clockList.add(masterClock);
+		clockMap.put(masterClock.pos(), masterClock);
+		
 		
 	}
 	
@@ -197,7 +208,6 @@ public class GUI extends PApplet {
 		
 		mousePos.x = scaleConverter(mouseX);
 		mousePos.y = scaleConverter(mouseY);
-		
 		if( editMode ) {
 			
 			// do some calculations on how to put the blocks in edit mode, depending on their positions
@@ -258,6 +268,7 @@ public class GUI extends PApplet {
 			}
 			
 			displayEditFocus();
+			displayClockFocus();
 			
 			for(Pair<BlockGroup> groupPair : linkedPairList) {
 				
@@ -266,9 +277,17 @@ public class GUI extends PApplet {
 				}
 				
 			}
+			for(Map.Entry<BlockGroup, Clock> clockBlockEntry : clockLinkMap.entrySet()) {
+				drawClockLink(focusMap.getKey(clockBlockEntry.getKey()), clockBlockEntry.getValue().pos());
+			}
 			if( newLink ) {
 				drawNewLink();
 			}
+			else if( newClockLink ) {
+				drawNewClockLink();
+			}
+			
+			blockChangedStateList.clear();
 			
 		}
 		else {
@@ -375,7 +394,103 @@ public class GUI extends PApplet {
 		ellipse(0, 0, editBlockScale, editBlockScale);
 		drawArrow(0, 0, editBlockScale*sin( 2*PI*((float) clock.time())/clock.switchTime() )/2, - editBlockScale*cos( 2*PI*((float) clock.time())/clock.switchTime() )/2 );
 		translate(- editBlockScale/2, - editBlockScale/2);
-		System.out.println(clock.time());
+		
+	}
+	
+	public void drawClockLink(Pos blockPos, Pos clockPos) {
+		
+		translate(- editBlockScale*(editGlobalOffset.x - editBounds[0].x), - editBlockScale*(editGlobalOffset.y - editBounds[0].y));
+		
+		editMousePos = XYtoPos(mouseX/editGlobalScale, mouseY/editGlobalScale);
+		buildMousePos = editMousePos.add(editLocalOffset);
+		Pos editOffsetSource = clockPos.add(new Pos(1,1));
+		Pos editOffsetDest = blockPos.sub(editLocalOffset);
+		float Xstart = editBlockScale*editOffsetSource.x/editGlobalScale;
+		float Ystart = editBlockScale*editOffsetSource.y/editGlobalScale;
+		float controlPointX = 0;
+		float controlPointY = 0;
+		float Xend = editBlockScale*editOffsetDest.x;
+		float Yend = editBlockScale*editOffsetDest.y;
+		
+		Pos dirPos = blockPos.sub(clockPos);
+		dirPos.normalize();
+		int dir = Direction.posToDir(dirPos);
+		
+		if( dir == Direction.EAST || dir == Direction.WEST ) {
+			if( dir == Direction.EAST ) {
+				Xstart = Xstart + editRoadScale;
+			}
+			else if( dir == Direction.WEST ) {
+				Xend = Xend + editRoadScale;
+			}
+			Ystart = Ystart + editRoadScale/2;
+			Yend = Yend + editRoadScale/2;
+			controlPointX = editBlockScale*editOffsetDest.x/editGlobalScale;
+			controlPointY = 0f;
+		}
+		else if( dir == Direction.NORTH || dir == Direction.SOUTH ){
+			if( dir == Direction.SOUTH ) {				
+				Ystart = Ystart + editRoadScale;
+			}
+		else if( dir == Direction.NORTH ) {
+				Yend = Yend + editRoadScale;
+			}
+			Xstart = Xstart + editRoadScale/2;
+			Xend = Xend + editRoadScale/2;
+			controlPointX = 0f;
+			controlPointY = editBlockScale*editOffsetDest.y/editGlobalScale;
+		}
+		
+		noFill();
+		stroke(173,255,47);
+		curve(Xstart, Ystart, Xstart, Ystart, Xend, Yend, controlPointX, controlPointY);
+		noStroke();
+		
+		translate(editBlockScale*(editGlobalOffset.x - editBounds[0].x), editBlockScale*(editGlobalOffset.y - editBounds[0].y));
+		
+	}
+	public void drawNewClockLink() {
+		translate(- editBlockScale*(editGlobalOffset.x - editBounds[0].x), - editBlockScale*(editGlobalOffset.y - editBounds[0].y));
+		
+		editMousePos = XYtoPos(mouseX/editGlobalScale, mouseY/editGlobalScale);
+		buildMousePos = editMousePos.add(editLocalOffset);
+			
+		float Xstart = editBlockScale*clockFocus.pos().x;
+		float Ystart = editBlockScale*clockFocus.pos().y;
+		float controlPointX = 0;
+		float controlPointY = 0;
+		float Xend;
+		float Yend;
+			
+		Xend = mouseX/editGlobalScale;
+		Yend = mouseY/editGlobalScale;
+			
+		Pos dirPos = editMousePos.sub(clockFocus.pos());
+		dirPos.normalize();
+		int dir = Direction.posToDir(dirPos);
+		
+		if( dir == Direction.EAST || dir == Direction.WEST ) {
+			if( dir == Direction.EAST ) {
+				Xstart = Xstart + editRoadScale;
+			}
+			Ystart = Ystart + editRoadScale/2;
+				controlPointX = mouseX/editGlobalScale;
+				controlPointY = 0f;
+			}
+			else if( dir == Direction.NORTH || dir == Direction.SOUTH ){
+				if( dir == Direction.SOUTH ) {
+					Ystart = Ystart + editRoadScale;
+				}
+				Xstart = Xstart + editRoadScale/2;
+				controlPointX = 0f;
+				controlPointY = mouseY/editGlobalScale;
+			}
+		
+		noFill();
+		stroke(0,128,255);
+		curve(Xstart, Ystart, Xstart, Ystart, Xend, Yend, controlPointX, controlPointY);
+		noStroke();
+		translate(editBlockScale*(editGlobalOffset.x - editBounds[0].x), editBlockScale*(editGlobalOffset.y - editBounds[0].y));
 		
 	}
 	
@@ -540,30 +655,64 @@ public class GUI extends PApplet {
 		
 		if( keyCode == TAB ) {
 			editFocus = null;
+			clockFocus = null;
 			editFocusMap.clear();
 			editMode = false;
+			newLink = false;
+			newClockLink = false;
 		}
 		
-		switch(key) {
-		case('q'):
-			if( editFocus != null) {
-				newLink = !newLink;
-			}
-		break;
-		case('r'):
-			linkedPairList.relink();
-		break;
-		case('d'):
-			for(Iterator<Pair<BlockGroup>> iter = linkedPairList.iterator(); iter.hasNext();) {
-				
-				Pair<BlockGroup> linkedPair = iter.next();
+		if( clockFocus != null ) {
+			
+			switch(key) {
+			case('q'):
+				newClockLink = !newClockLink;
+				break;
+			case('d'):
+				for(Iterator<Map.Entry<BlockGroup, Clock>> iter = clockLinkMap.entrySet().iterator(); iter.hasNext();) {
 					
-				if( editFocusMap.containsValue(linkedPair.first) && editFocusMap.containsValue(linkedPair.second) ) {
+					Map.Entry<BlockGroup, Clock> clockLink = iter.next();
+					
+					if( editFocusMap.containsValue(clockLink.getKey()) ) {
 						
-					editFocusMap.remove(linkedPair.first);
-					editFocusMap.remove(linkedPair.second);
-					iter.remove();
+						clockLink.getValue().removeLink(clockLink.getKey());
+						iter.remove();
 						
+					}
+					
+				}
+			}
+			
+		}
+		else if( editFocus != null ) {
+			
+			switch(key) {
+			case('s'):
+				editFocus.changeState();
+				break;
+			case('q'):
+					newLink = !newLink;
+			break;
+			case('r'):
+				linkedPairList.relink();
+			break;
+			case('d'):
+				for(Iterator<Pair<BlockGroup>> iter = linkedPairList.iterator(); iter.hasNext();) {
+					
+					Pair<BlockGroup> linkedPair = iter.next();
+						
+					if( editFocusMap.containsValue(linkedPair.first) && editFocusMap.containsValue(linkedPair.second) ) {
+							
+						/*
+						//editFocusMap.remove(linkedPair.first);
+						//editFocusMap.remove(linkedPair.second);
+						*/
+						linkedPair.first.removeLink(linkedPair.second);
+						linkedPair.second.removeLink(linkedPair.first);
+						iter.remove();
+							
+					}
+					
 				}
 				
 			}
@@ -599,22 +748,22 @@ public class GUI extends PApplet {
 		// instantiators
 		switch(key) {
 		case('q'):
-			newFocus = BlockGroup.newLongRoad(numKey, Direction.EAST, false);
+			newFocus = BlockGroup.newLongRoad(numKey, Direction.EAST, true);
 			break;
 		case('l'):
-			newFocus = BlockGroup.newLaneRoad(numKey, Direction.EAST, false);
+			newFocus = BlockGroup.newLaneRoad(numKey, Direction.EAST, true);
 			break;
 		case('w'):
-			newFocus = BlockGroup.newCurve(numKey, false);
+			newFocus = BlockGroup.newCurve(numKey, true);
 			break;
 		case('e'):
-			newFocus = new BlockGroup( new Crossing(Direction.EAST, Direction.LEFT, false, this) );
+			newFocus = new BlockGroup( new Crossing(Direction.EAST, Direction.LEFT, true, this) );
 			break;
 		case('t'):
-			newFocus = new BlockGroup( new TCrossing(Direction.EAST, Direction.LEFT, true, false, this) );
+			newFocus = new BlockGroup( new TCrossing(Direction.EAST, Direction.LEFT, true, true, this) );
 			break;
 		case('y'):
-			newFocus = BlockGroup.newBendedRoad(numKey, Direction.EAST, Direction.LEFT, false);
+			newFocus = BlockGroup.newBendedRoad(numKey, Direction.EAST, Direction.LEFT, true);
 			break;
 		case('c'):
 			if( currentFocus != null ) {
@@ -644,30 +793,54 @@ public class GUI extends PApplet {
 			}
 	
 		}
-		else if( currentFocus != null ) {
-			switch(key) {
-				case('r'):
-					currentFocus.rotate();
-					break;
-				case('f'):
-					currentFocus.flip();
-					break;
-				case('v'):
-					currentFocus.revert();
-					break;
-				case('d'):
-					if( currentFocus != blockMap.getDummyValue() ) {
+		else {
+			
+			if( currentFocus != null ) {
+				switch(key) {
+					case('r'):
+						currentFocus.rotate();
+						break;
+					case('f'):
+						currentFocus.flip();
+						break;
+					case('v'):
+						currentFocus.revert();
+						break;
 						
-						for(Map.Entry<Pos, BlockGroup> groupFocus : focusSet) {
-							
-							mapSet.remove(groupFocus);
-						}
-						currentFocus = null;
-						focusMap.clear();
-					}
-				break;
+				}	
+			}
+			if( key == 'd' ) {
+				
+				if( currentFocus != blockMap.getDummyValue() ) {
 					
-			}	
+					for(Map.Entry<Pos, BlockGroup> groupFocus : focusSet) {
+						
+						mapSet.remove(groupFocus);
+					}
+					currentFocus = null;
+					focusMap.clear();
+				}
+				
+			}
+			
+		}
+	
+		
+	}
+	
+	
+	// Works ok...
+	public void blockStateChanged(BlockGroup block) {
+	
+		for(Pair<BlockGroup> blockPair : linkedPairList) {
+			
+			if( blockPair.first == block && ! blockChangedStateList.contains(block) ) {
+				
+				blockChangedStateList.add(block);
+				blockPair.second.changeState();
+				
+			}
+			
 		}
 		
 	}
@@ -792,17 +965,11 @@ public class GUI extends PApplet {
 		translate(- editBlockScale*(editGlobalOffset.x - editBounds[0].x), - editBlockScale*(editGlobalOffset.y - editBounds[0].y));
 		editMousePos = XYtoPos(mouseX/editGlobalScale, mouseY/editGlobalScale);
 		buildMousePos = editMousePos.add(editLocalOffset);
-		System.out.println(editMousePos + " " + editBounds[1].sub(editLocalOffset));
+		//System.out.println(editMousePos + " " + editBounds[1].sub(editLocalOffset));
 		//if( editMousePos.compareTo(editGlobalOffset) >= 0 && editMousePos.compareTo(editBounds[1].sub(editLocalOffset)) <= 0 ) {
 		
-		
-		if( mouseButton == RIGHT ) {
-			
-			
-			
-		}
 		if( focusMap.containsKey(buildMousePos) ) {
-				
+			
 			if( (keyPressed && keyCode == SHIFT) ) {
 					
 				editFocus = blockMap.get(buildMousePos);
@@ -811,27 +978,58 @@ public class GUI extends PApplet {
 			}
 			else if( newLink ) {
 					
+				BlockGroup blockToBeLinked = blockMap.get(buildMousePos);
+				
+				for(BlockGroup focusBlock : editFocusMap.values()) {
+					
+					linkedPairList.add(Pair.of(focusBlock, blockToBeLinked));
+					focusBlock.addLink(blockToBeLinked);
+					blockToBeLinked.addLink(focusBlock);
+					
+				}
+				/*
 				for(Map.Entry<Pos, BlockGroup> focusEntry : editFocusMap.entrySet() ) {
 					linkedPairList.add(Pair.of(focusEntry.getValue(), blockMap.get(buildMousePos)));
+					focusEntry.getValue().addLink(blockMap.get(buildMousePos));
+					blockMap.get(buildMousePos).addLink(focusEntry.getValue());
 				}
+				*/
 					
 				newLink = false;
 					
+			}
+			else if( newClockLink ) {
+				
+				clockFocus.addLink(blockMap.get(buildMousePos));
+				clockLinkMap.put(blockMap.get(buildMousePos), clockFocus);
+				newClockLink = false;
+				
 			}
 			else {
 					
 				editFocusMap.clear();
 				editFocus = blockMap.get(buildMousePos);
 				editFocusMap.put(editMousePos, editFocus);
+				clockFocus = null;
 					
 			}
 				
+		}
+		else if( clockMap.containsKey(editMousePos) ) {
+			
+			if( !(keyPressed && keyCode == SHIFT) ) {
+				editFocusMap.clear();
+			}
+			clockFocus = clockMap.get(editMousePos);
+			
 		}
 			
 		else {
 			
 			editFocusMap.clear();
 			editFocus = null;
+			clockFocus = null;
+			newClockLink = false;
 			
 		}
 		
@@ -976,6 +1174,20 @@ public class GUI extends PApplet {
 	
 	////// BUILDING BLOCK DISPLAY METHODS ////////
 	
+	public void displayClockFocus() {
+		
+		if( clockFocus != null) {
+			
+			strokeWeight(2);
+			stroke(255,165,0);
+			noFill();
+			rect(editBlockScale*(clockFocus.pos().x + editLocalOffset.x), editBlockScale*(clockFocus.pos().y + editLocalOffset.y), editBlockScale, editBlockScale);
+			noStroke();
+			strokeWeight(1);
+		}
+		
+	}
+	
 	public void displayEditFocus() {
 		
 		for(Map.Entry<Pos, BlockGroup> editFocusEntry : editFocusMap.entrySet() ) {
@@ -993,7 +1205,7 @@ public class GUI extends PApplet {
 	}
 	
 	// EDIT MODE 
-	public void displayBlockEdit(Pos groupOffset, Matrix<Boolean> connectionMatrix, DataRing<Boolean> inputRing, DataRing<Boolean> outputRing, boolean diagonal) {
+	public void displayBlockEdit(Pos groupOffset, Matrix<Boolean> connectionMatrix, Matrix<Boolean> stateMatrix, DataRing<Boolean> inputRing, DataRing<Boolean> outputRing, boolean diagonal) {
 		
 		translate(editBlockScale*groupOffset.x, editBlockScale*groupOffset.y);
 		rect(0, 0, editRoadScale, editRoadScale);
@@ -1007,13 +1219,15 @@ public class GUI extends PApplet {
 			for(int i = 0; i < 4; i++) {
 				
 				if( inputRing.get(i) || outputRing.get(i) ) {
+					/*
 					if( inputRing.get(i) ) {
 						fill(0,0,255);
 					}
 					else {
 						fill(255,0,0);
 					}
-					
+					*/
+					noFill();
 					
 					if( i == Direction.NORTH || i == Direction.SOUTH ) {
 						ellipse(0, (i - 1)*editRoadScale/sqrt(2), editPointScale, editPointScale);
@@ -1042,6 +1256,22 @@ public class GUI extends PApplet {
 			
 			noStroke();
 			strokeWeight(1);
+			
+			// redLights
+			
+			for(int i = 0; i < 4; i++) {
+				for(int j = 0; j < 4; j++) {
+					if( connectionMatrix.get(i,j) && stateMatrix.get(i, j) ) {
+						fill(0, 255, 0);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/sqrt(2), - editRoadScale*Direction.dirToPos(i).y/sqrt(2), editRoadScale/5, editRoadScale/5);
+					}
+					else if( connectionMatrix.get(i,j) ) {
+						fill(255, 0, 0);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/sqrt(2), - editRoadScale*Direction.dirToPos(i).y/sqrt(2), editRoadScale/5, editRoadScale/5);
+					}
+				}
+			}
+			
 			rotate(-PI/4);
 			translate(- editRoadScale/2, - editRoadScale/2);
 			
@@ -1051,12 +1281,15 @@ public class GUI extends PApplet {
 			for(int i = 0; i < 4; i++) {
 				
 				if( inputRing.get(i) || outputRing.get(i) ) {
+					/*
 					if( inputRing.get(i) ) {
 						fill(0,0,255);
 					}
 					else {
 						fill(255,0,0);
 					}
+					*/
+					noFill();
 					
 					if( i == Direction.NORTH || i == Direction.SOUTH ) {
 						ellipse(editRoadScale/2, i*editRoadScale/2, editPointScale, editPointScale);
@@ -1071,7 +1304,7 @@ public class GUI extends PApplet {
 			
 			stroke(0, 150, 255);
 			strokeWeight(2);
-			
+			// arrows
 			for(int i = 0; i < 4; i++) {
 				for(int j = 0; j < 4; j++) {
 					if( connectionMatrix.get(i, j) ) {
@@ -1082,9 +1315,24 @@ public class GUI extends PApplet {
 					}
 				}
 			}
-			
 			noStroke();
 			strokeWeight(1);
+			
+			// redLights
+			translate(editRoadScale/2, editRoadScale/2);
+			for(int i = 0; i < 4; i++) {
+				for(int j = 0; j < 4; j++) {
+					if( connectionMatrix.get(i,j) && stateMatrix.get(i, j) ) {
+						fill(0, 255, 0);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/2, - editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
+					}
+					else if( connectionMatrix.get(i,j) ) {
+						fill(255, 0, 0);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/2, - editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
+					}
+				}
+			}
+			translate(- editRoadScale/2, - editRoadScale/2);
 			
 		}
 		
@@ -1092,7 +1340,7 @@ public class GUI extends PApplet {
 		
 	}
 	
-	public void displayBendedRoadEdit(Pos groupOffset, Matrix<Boolean> connectionMatrix, DataRing<Boolean> inputRing, DataRing<Boolean> outputRing, boolean diagonal, int dir, int bend) {
+	public void displayBendedRoadEdit(Pos groupOffset, Matrix<Boolean> connectionMatrix, Matrix<Boolean> stateMatrix, DataRing<Boolean> inputRing, DataRing<Boolean> outputRing, boolean diagonal, int dir, int bend) {
 		System.out.println(outputRing);
 		translate(editBlockScale*groupOffset.x, editBlockScale*groupOffset.y);
 		rect(0, 0, editRoadScale, editRoadScale);
@@ -1100,17 +1348,18 @@ public class GUI extends PApplet {
 		
 		if( diagonal ) {
 			
+			noFill();
 			for(int i = 0; i < 4; i++) {
 				
 				if( inputRing.get(i) ) {
 					
-					fill(0,0,255);
+					//fill(0,0,255);
 					ellipse(editRoadScale*editBendedArrowMapX.get(i), editRoadScale*editBendedArrowMapY.get(i), editPointScale, editPointScale);
 					
 				}
 				if( outputRing.get(i) ) {
 					
-					fill(255,0,0);
+					//fill(255,0,0);
 					ellipse(editRoadScale*editBendedDiagonalArrowMapX.get(i), editRoadScale*editBendedDiagonalArrowMapY.get(i), editPointScale, editPointScale);
 					
 				}
@@ -1129,25 +1378,41 @@ public class GUI extends PApplet {
 					}
 				}
 			}
-			
 			noStroke();
 			strokeWeight(1);
 			
+			translate(editRoadScale/2, editRoadScale/2);
+			rotate(PI/4);
+			for(int i = 0; i < 4; i++) {
+				for(int j = 0; j < 4; j++) {
+					if( connectionMatrix.get(i,j) && stateMatrix.get(i, j) ) {
+						fill(0, 255, 0);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/sqrt(2), - editRoadScale*Direction.dirToPos(i).y/sqrt(2), editRoadScale/5, editRoadScale/5);
+					}
+					else if( connectionMatrix.get(i,j) ) {
+						fill(255, 0, 0);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/sqrt(2), - editRoadScale*Direction.dirToPos(i).y/sqrt(2), editRoadScale/5, editRoadScale/5);
+					}
+				}
+			}
+			rotate(- PI/4);
+			translate(- editRoadScale/2, - editRoadScale/2);
+			
 		}
 		else {
-			
+			noFill();
 			for(int i = 0; i < 4; i++) {
 				
 				
 				if( inputRing.get(i) ) {
 					
-					fill(0,0,255);
+					//fill(0,0,255);
 					ellipse(editRoadScale*editArrowMapX.get(i), editRoadScale*editArrowMapY.get(i), editPointScale, editPointScale);
 					
 				}
 				else if( outputRing.get(i) ) {
 					
-					fill(255,0,0);
+					//fill(255,0,0);
 					ellipse(editRoadScale*editBendedArrowMapX.get(i), editRoadScale*editBendedArrowMapY.get(i), editPointScale, editPointScale);
 					
 				}
@@ -1171,8 +1436,24 @@ public class GUI extends PApplet {
 			noStroke();
 			strokeWeight(1);
 			
+			translate(editRoadScale/2, editRoadScale/2);
+			
+			for(int i = 0; i < 4; i++) {
+				for(int j = 0; j < 4; j++) {
+					if( connectionMatrix.get(i,j) && stateMatrix.get(i, j) ) {
+						fill(0, 255, 0);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/2, - editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
+					}
+					else if( connectionMatrix.get(i,j) ) {
+						fill(255, 0, 0);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/2, - editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
+					}
+				}
+			}
+			translate(- editRoadScale/2, - editRoadScale/2);
+			
 		}
-		
+	
 		translate(- editBlockScale*groupOffset.x, - editBlockScale*groupOffset.y);
 		
 	}

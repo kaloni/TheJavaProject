@@ -293,6 +293,20 @@ public class Pos implements Comparable<Pos> {
 		return new Pos(newX,newY);
 	}
 	
+	public static double dist(Pos pos1, Pos pos2) {
+		
+		Pos posDiff = pos1.sub(pos2);
+		
+		return Math.sqrt(posDiff.x*posDiff.x + posDiff.y*posDiff.y);
+		
+	}
+	
+	public double abs() {
+		
+		return Math.sqrt(x*x + y*y);
+		
+	}
+	
 	
 	@Override
 	public String toString() {

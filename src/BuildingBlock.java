@@ -17,6 +17,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	protected int speedLimit;
 	protected int dir;
 	protected int bend; // bend = +-1
+	protected boolean reverted;
 	protected boolean redLight;
 	protected boolean diagonal;
 	protected Pos groupOrigin;
@@ -111,6 +112,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 			connectionRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr) || connectionMatrix.getColSum(r, Matrix.boolOr));
 			inputRing.set(r, connectionMatrix.getRowSum(r, Matrix.boolOr));
 			outputRing.set(r, connectionMatrix.getColSum(r, Matrix.boolOr));
+			
 		}
 		
 	}
@@ -177,7 +179,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	}
 	
 	public void displayEdit(Pos groupOffset) {
-		gui.displayBlockEdit(groupOffset, connectionMatrix, inputRing, outputRing, diagonal);
+		gui.displayBlockEdit(groupOffset, connectionMatrix, stateMatrix, inputRing, outputRing, diagonal);
 	}
 	
 	public boolean isDiagonal() {
@@ -365,6 +367,8 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		}
 		connectionMatrix.transpose();
 		updateRing();
+		dir = Direction.antiDir(dir);
+		reverted = !reverted;
 		
 	}
 	

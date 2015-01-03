@@ -18,7 +18,7 @@ public class Main extends JFrame {
 
 	public static void main(String[] args) {
 		
-		GameFrame game = new GameFrame();
+		//GameFrame game = new GameFrame();
 		
 		/*
 		int rows = 4;
@@ -70,7 +70,8 @@ public class Main extends JFrame {
 		Matrix<Boolean> symBoolMatrix1 = new Matrix<>(symBoolArray);
 		Matrix<Boolean> symBoolMatrix2 = new Matrix<>(symBoolArray2);
 		Matrix<Boolean> boolOpMatrix = symBoolMatrix1.directOp(symBoolMatrix2, Matrix.boolOr);
-
+	
+		 */
 		Server server;
 		try {
 			server = new Server();
@@ -81,7 +82,7 @@ public class Main extends JFrame {
 
 		LoginForm loginForm = new LoginForm();
 		loginForm.setVisible(true);
-		 */
+		 
 		
 		
 	}

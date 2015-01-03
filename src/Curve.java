@@ -1,6 +1,6 @@
 
 public class Curve extends BuildingBlock {
-
+	
 	public Curve(int dir, int bend, boolean redLight, GUI gui) {
 		
 		super(dir, gui);
@@ -16,6 +16,10 @@ public class Curve extends BuildingBlock {
 		}
 		addState(stateMatrixGreenLight);
 		
+	}
+	
+	public void setReverted(boolean reverted) {
+		this.reverted = reverted;
 	}
 	
 	@Override
@@ -35,10 +39,25 @@ public class Curve extends BuildingBlock {
 	}
 	
 	@Override
+	public void revert() {
+		
+		super.revert();
+		if( reverted ) {
+			dir = Direction.dirBend(dir, Direction.LEFT);
+		}
+		else {
+			dir = Direction.dirBend(dir, Direction.RIGHT);
+		}
+		bend = -bend;
+		
+	}
+	
+	@Override
 	public Curve clone() {
 		
 		Curve curveClone = new Curve(dir, bend, redLight, gui);
 		curveClone.setDiagonal(diagonal);
+		curveClone.setReverted(reverted);
 		
 		for(Matrix<Boolean> stateMatrix : stateList) {
 			

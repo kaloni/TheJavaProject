@@ -14,7 +14,7 @@ public class BendedRoad extends Curve {
 	
 	@Override
 	public void displayEdit(Pos groupOffset) {
-		gui.displayBendedRoadEdit(groupOffset, connectionMatrix, inputRing, outputRing, diagonal, dir, bend);
+		gui.displayBendedRoadEdit(groupOffset, connectionMatrix, stateMatrix, inputRing, outputRing, diagonal, dir, bend);
 	}
 	
 	
@@ -38,7 +38,9 @@ public class BendedRoad extends Curve {
 	public void revert() {
 		
 		super.revert();
-		// TODO : not right here
+		//reverted = !reverted;
+		diagonal = !diagonal;
+		
 		
 	}
 	
@@ -46,6 +48,8 @@ public class BendedRoad extends Curve {
 	public BendedRoad clone() {
 		
 		BendedRoad bendedRoadClone = new BendedRoad(dir, bend, redLight, gui);
+		bendedRoadClone.setDiagonal(diagonal);
+		bendedRoadClone.setReverted(reverted);
 		
 		for(Matrix<Boolean> stateMatrix : stateList) {
 			

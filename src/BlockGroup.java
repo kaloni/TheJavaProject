@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,6 +20,8 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 	private boolean focused;
 	private Pos origin;
 	
+	private List<BlockGroup> blockLinkList;
+	
 	///////// CONSTRUCORS (2) //////////
 	
 	public BlockGroup(int axis) {
@@ -27,6 +31,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		speedLimit = 0;
 		focused = false;
 		origin = new Pos(0,0);
+		blockLinkList = new ArrayList<>();
 		
 	}
 	
@@ -39,6 +44,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		speedLimit = 0;
 		focused = false;
 		origin = new Pos(0,0);
+		blockLinkList = new ArrayList<>();
 		
 	}
 	
@@ -71,12 +77,32 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 	}
 	
 	public void changeState() {
-		
+		System.out.println("changingStae");
 		for(BuildingBlock block : values()) {
 			
 			block.setState( (block.currentStateNumber() + 1) %  block.maxState);
 			
 		}
+		gui.blockStateChanged(this);
+		/*
+		for( BlockGroup blockGroup : blockLinkList ) {
+			blockGroup.changeState();
+		}
+		*/
+	
+	}
+	
+	public void addLink(BlockGroup blockGroup) {
+		
+		if( ! blockLinkList.contains(blockGroup) ) {
+			blockLinkList.add(blockGroup);
+		}
+		
+	}
+	
+	public void removeLink(BlockGroup blockGroup) {
+		
+		blockLinkList.remove(blockGroup);
 		
 	}
 	
@@ -162,6 +188,8 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 			blockEntry.getValue().revert();
 			
 		}
+		
+		groupAxis = Direction.antiDir(groupAxis);
 		
 	}
 	
