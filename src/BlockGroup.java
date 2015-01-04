@@ -9,7 +9,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 
 	private static GUI gui;
 	private static BlockMap<Pos, BlockGroup> parent;
-	private BlockMap<Pos, BuildingBlock> innerBlockMap;
+	//private BlockMap<Pos, BuildingBlock> innerBlockMap;
 	private Set<Map.Entry<Pos, BuildingBlock>> innerMapSet;
 	
 	private int rows;
@@ -19,7 +19,8 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 	private int speedLimit;
 	private boolean focused;
 	private Pos origin;
-	
+
+	private HashMap<Pos, BlockGroup> neighborMap;
 	private List<BlockGroup> blockLinkList;
 	
 	///////// CONSTRUCORS (2) //////////
@@ -32,6 +33,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		focused = false;
 		origin = new Pos(0,0);
 		blockLinkList = new ArrayList<>();
+		neighborMap = new BlockMap<Pos, BlockGroup>();
 		
 	}
 	
@@ -45,6 +47,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		focused = false;
 		origin = new Pos(0,0);
 		blockLinkList = new ArrayList<>();
+		neighborMap = new BlockMap<Pos, BlockGroup>();
 		
 	}
 	
@@ -74,6 +77,69 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 	
 	public void setFocused(boolean bool) {
 		focused = bool;
+	}
+	
+	// this methods only works on "singleton BlockGroups", which is all we use in this version
+	public BuildingBlock getBlock() {
+		
+		if( this.size() == 1 ) {
+			return this.get(new Pos(0,0));
+		}
+		
+		return null;
+		
+	}
+	
+	public int neighbors() {
+		return neighborMap.size();
+	}
+	
+	public void addNeighbor(Pos relativePos, BlockGroup neighbor) {
+		
+		neighborMap.put(relativePos, neighbor);
+		// make the internal connections between blocks on BuildingBlock scale
+		// if not connectable the connection will get "refused", nothing will happen
+		if( getBlock() != null && neighbor.getBlock() != null ) {
+			getBlock().connectWith(relativePos, neighbor.getBlock());
+		}
+	}
+	
+	public void removeNeighbor(BlockGroup neighbor) {
+		
+		if( getBlock() != null && neighbor.getBlock() != null ) {
+			getBlock().removeConnection(neighbor.getBlock());
+		}
+		neighborMap.values().remove(neighbor);
+	}
+	
+	// updates the map of neighbors and updates the corresponding neighbors of any changes in this
+	// using addNeighbor enables forwarding to BuildingBlocks with connectWith, so any connections can be changed as well
+	public void updateNeighbors() {
+		
+		Pos thisPos = gui.getPos(this);
+		removeFromNeighbors();
+		neighborMap.clear();
+		
+		for(int x = thisPos.x - 1; x <= thisPos.x + 1; x++) {
+			for(int y = thisPos.y - 1; y <= thisPos.y + 1; y++) {
+				
+				BlockGroup blockNeighbor = gui.getBlock(new Pos(x,y));
+					
+				if( !(x == thisPos.x && y == thisPos.y) && blockNeighbor != null) {
+					addNeighbor(new Pos(x - thisPos.x, y - thisPos.y), blockNeighbor);
+					blockNeighbor.addNeighbor(new Pos(thisPos.x - x, thisPos.y - y), this);
+				}
+				
+			}
+		}
+		
+	}
+	
+	// removes this from neighbors
+	public void removeFromNeighbors() {
+		for(BlockGroup neighbor : neighborMap.values()) {
+			neighbor.removeNeighbor(this);
+		}
 	}
 	
 	public void changeState() {

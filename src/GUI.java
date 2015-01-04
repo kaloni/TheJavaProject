@@ -23,6 +23,7 @@ public class GUI extends PApplet {
 	
 	private int width;
 	private int height;
+	private boolean runMode;
 	private boolean editMode;
 	private boolean editSetup;
 	private Pos[] editBounds;
@@ -37,6 +38,8 @@ public class GUI extends PApplet {
 	
 	public final float arrowHeadSizeFactor = 5;
 	
+	public float runButtonScaleX = 60;
+	public float runButtonScaleY = 60;
 	public float blockScale = 30f; // any positive float
 	public float roadScale = 15f; // between 0 and blockScale
 	// actually same as buildScale, using processing scale() for scaling instead..
@@ -205,10 +208,20 @@ public class GUI extends PApplet {
 		scale(globalScale);
 		translate(- globalOrigin.x, - globalOrigin.y);
 		*/
-		
 		mousePos.x = scaleConverter(mouseX);
 		mousePos.y = scaleConverter(mouseY);
-		if( editMode ) {
+		if( runMode ) {
+			noLoop();
+			PathFinder pathFinder = new PathFinder(blockMap);
+			pathFinder.constructMatrix();
+			System.out.println(pathFinder.getMatrix());
+			HashMap<Integer, Pos> indexMap = pathFinder.getIndexMap();
+			for(Integer intKey : indexMap.keySet()) {
+				System.out.println(indexMap.get(intKey));
+			}
+			
+		}
+		else if( editMode ) {
 			
 			// do some calculations on how to put the blocks in edit mode, depending on their positions
 			if( editSetup ) {
@@ -331,8 +344,17 @@ public class GUI extends PApplet {
 			
 		}
 		
+		drawRunButton();
 		// same in both build and edit
 		
+	}
+	
+	public Pos getPos(BlockGroup block) {
+		return blockMap.getKey(block);
+	}
+	
+	public BlockGroup getBlock(Pos pos) {
+		return blockMap.getValue(pos);
 	}
 	
 	public void updateOffsets() {
@@ -367,6 +389,16 @@ public class GUI extends PApplet {
 		bendedRoadScaleX[3] = blockScale/bendedRoadFactor;
 		bendedRoadScaleY[0] = blockScale/bendedRoadFactor;
 		bendedRoadScaleY[2] = blockScale/bendedRoadFactor;
+		
+	}
+	
+	public void drawRunButton() {
+		
+		fill(0, 0, 255, 100);
+		rect(width - runButtonScaleX, 0, runButtonScaleX, runButtonScaleY);
+		fill(0, 0, 0);
+		textSize(32);
+		text("Run", width - runButtonScaleX, runButtonScaleY/2);
 		
 	}
 	
@@ -723,6 +755,12 @@ public class GUI extends PApplet {
 	
 	public void buildKeyPressed() {
 		
+		// p test key
+		if( key == 'p') {
+			if( currentFocus != null) {
+				System.out.println(currentFocus.getBlock().connections());
+			}
+		}
 		// if pressing anything except SHIFT, TAB or D makes all focus disappear
 		if( keyCode != SHIFT && keyCode != TAB && keyCode != UP && key != 'd' && key != 'r' && key != 'f' && key != 'v' && key != ' ') {
 			focusMap.clear();
@@ -741,9 +779,12 @@ public class GUI extends PApplet {
 			roadScale = roadScale/1.1f;
 			updateOffsets();
 		}
+		// they option to choose road size is no implemented yet
+		/*
 		if( key == '1' || key == '2' || key == '3' || key == '4' ) {
 			numKey = Character.getNumericValue(key);
 		}
+		*/
 		
 		// instantiators
 		switch(key) {
@@ -796,15 +837,21 @@ public class GUI extends PApplet {
 		else {
 			
 			if( currentFocus != null ) {
+				
+				currentFocus.updateNeighbors();
+				
 				switch(key) {
 					case('r'):
 						currentFocus.rotate();
+						currentFocus.updateNeighbors();
 						break;
 					case('f'):
 						currentFocus.flip();
+						currentFocus.updateNeighbors();
 						break;
 					case('v'):
 						currentFocus.revert();
+						currentFocus.updateNeighbors();
 						break;
 						
 				}	
@@ -813,9 +860,11 @@ public class GUI extends PApplet {
 				
 				if( currentFocus != blockMap.getDummyValue() ) {
 					
-					for(Map.Entry<Pos, BlockGroup> groupFocus : focusSet) {
+					for(Map.Entry<Pos, BlockGroup> focusEntry : focusSet) {
 						
-						mapSet.remove(groupFocus);
+						mapSet.remove(focusEntry);
+						focusEntry.getValue().removeFromNeighbors();
+						
 					}
 					currentFocus = null;
 					focusMap.clear();
@@ -950,7 +999,13 @@ public class GUI extends PApplet {
 	}
 	
 	public void mousePressed() {
-		if( editMode ) { 
+		
+		if( width - runButtonScaleX - mouseX <= 0 && mouseY <= runButtonScaleY ) {
+			
+			runMode = true;
+			
+		}
+		else if( editMode ) { 
 			editMousePressed();
 		}
 		else { 
@@ -1052,6 +1107,23 @@ public class GUI extends PApplet {
 					currentFocus = newFocus;
 					focusMap.put(mousePos,currentFocus);
 					newFocus = null;
+					
+					// Add neighbors
+					Pos posFocus = blockMap.getKey(currentFocus);
+					int focusX = posFocus.x;
+					int focusY = posFocus.y;
+					for(int x = focusX - 1; x <= focusX + 1; x++) {
+						for(int y = focusY - 1; y <= focusY + 1; y++) {
+							
+							BlockGroup blockNeighbor = blockMap.get(new Pos(x,y));
+								
+							if( !(x == focusX && y == focusY) && blockNeighbor != null) {
+								currentFocus.addNeighbor(new Pos(x - focusX, y - focusY), blockNeighbor);
+								blockNeighbor.addNeighbor(new Pos(focusX - x, focusY - y), currentFocus);
+							}
+							
+						}
+					}
 					
 				}
 				
@@ -1263,11 +1335,11 @@ public class GUI extends PApplet {
 				for(int j = 0; j < 4; j++) {
 					if( connectionMatrix.get(i,j) && stateMatrix.get(i, j) ) {
 						fill(0, 255, 0);
-						ellipse(editRoadScale*Direction.dirToPos(i).x/sqrt(2), - editRoadScale*Direction.dirToPos(i).y/sqrt(2), editRoadScale/5, editRoadScale/5);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/sqrt(2), editRoadScale*Direction.dirToPos(i).y/sqrt(2), editRoadScale/5, editRoadScale/5);
 					}
 					else if( connectionMatrix.get(i,j) ) {
 						fill(255, 0, 0);
-						ellipse(editRoadScale*Direction.dirToPos(i).x/sqrt(2), - editRoadScale*Direction.dirToPos(i).y/sqrt(2), editRoadScale/5, editRoadScale/5);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/sqrt(2), editRoadScale*Direction.dirToPos(i).y/sqrt(2), editRoadScale/5, editRoadScale/5);
 					}
 				}
 			}
@@ -1324,11 +1396,11 @@ public class GUI extends PApplet {
 				for(int j = 0; j < 4; j++) {
 					if( connectionMatrix.get(i,j) && stateMatrix.get(i, j) ) {
 						fill(0, 255, 0);
-						ellipse(editRoadScale*Direction.dirToPos(i).x/2, - editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/2, editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
 					}
 					else if( connectionMatrix.get(i,j) ) {
 						fill(255, 0, 0);
-						ellipse(editRoadScale*Direction.dirToPos(i).x/2, - editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/2, editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
 					}
 				}
 			}
@@ -1341,7 +1413,7 @@ public class GUI extends PApplet {
 	}
 	
 	public void displayBendedRoadEdit(Pos groupOffset, Matrix<Boolean> connectionMatrix, Matrix<Boolean> stateMatrix, DataRing<Boolean> inputRing, DataRing<Boolean> outputRing, boolean diagonal, int dir, int bend) {
-		System.out.println(outputRing);
+		
 		translate(editBlockScale*groupOffset.x, editBlockScale*groupOffset.y);
 		rect(0, 0, editRoadScale, editRoadScale);
 		fill(255,0,0);
@@ -1442,11 +1514,11 @@ public class GUI extends PApplet {
 				for(int j = 0; j < 4; j++) {
 					if( connectionMatrix.get(i,j) && stateMatrix.get(i, j) ) {
 						fill(0, 255, 0);
-						ellipse(editRoadScale*Direction.dirToPos(i).x/2, - editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/2, editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
 					}
 					else if( connectionMatrix.get(i,j) ) {
 						fill(255, 0, 0);
-						ellipse(editRoadScale*Direction.dirToPos(i).x/2, - editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
+						ellipse(editRoadScale*Direction.dirToPos(i).x/2, editRoadScale*Direction.dirToPos(i).y/2, editRoadScale/5, editRoadScale/5);
 					}
 				}
 			}

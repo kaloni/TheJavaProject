@@ -18,60 +18,8 @@ public class Main extends JFrame {
 
 	public static void main(String[] args) {
 		
-		//GameFrame game = new GameFrame();
 		
 		/*
-		int rows = 4;
-		int cols = 4;
-		
-		Boolean[][] tempBool = new Boolean[rows][cols];
-		Boolean[][] tempBool2 = new Boolean[cols][rows];
-		Integer[][] tempIntArray = new Integer[rows][cols];
-		Integer[][] tempInt2Array = new Integer[cols][rows];
-		Integer[][] symIntArray = new Integer[rows][rows];
-		Integer[][] symIntArray2 = new Integer[rows][rows];
-		Boolean[][] symBoolArray = new Boolean[rows][rows];
-		Boolean[][] symBoolArray2 = new Boolean[rows][rows];
-		for(int i = 0; i < rows; i++) {
-			for(int j = 0; j < cols; j++) {
-				int tempInt = new Random().nextInt(10);
-				int tempInt2 = new Random().nextInt(10);
-				int tempBoolint = new Random().nextInt(2);
-				int tempBoolint2 = new Random().nextInt(2);
-				tempIntArray[i][j] = tempInt;
-				tempInt2Array[j][i] = tempInt2;
-				tempBool[i][j] = ( tempBoolint == 0 );
-				tempBool2[j][i] = ( tempBoolint2 == 0 );
-			}
-			for(int k = 0; k < rows; k++) {
-				int tempInt = new Random().nextInt(10);
-				int tempInt2 = new Random().nextInt(10);
-				int tempBoolint = new Random().nextInt(2);
-				int tempBoolint2 = new Random().nextInt(2);
-				symIntArray[i][k] = tempInt;
-				symIntArray2[i][k] = tempInt2;
-				symBoolArray[i][k] = ( tempBoolint == 0 );
-				symBoolArray2[i][k] = ( tempBoolint2 == 0 );
-			}
-		}
-		
-		
-		Matrix<Boolean> matrix1 =  new Matrix<>(tempBool);
-		Matrix<Boolean> matrix2 =  new Matrix<>(tempBool2);
-		Matrix<Boolean> multMatrix = matrix1.matrixMult(matrix2, Matrix.boolOr, Matrix.boolAnd);
-		Matrix<Integer> intMatrix1 = new Matrix<>(tempIntArray);
-		Matrix<Integer> intMatrix2 = new Matrix<>(tempInt2Array);
-		Matrix<Integer> intMultMatrix = intMatrix1.matrixMult(intMatrix2, Matrix.intAdd, Matrix.intMult);
-		//Matrix<Boolean> opMatrix = matrix1.directOp(matrix2, Matrix.boolOr);
-		
-		Matrix<Integer> symIntMatrix1 = new Matrix<>(symIntArray);
-		Matrix<Integer> symIntMatrix2 = new Matrix<>(symIntArray2);
-		Matrix<Integer> intOpMatrix = symIntMatrix1.directOp(symIntMatrix2, Matrix.intAdd);
-		Matrix<Boolean> symBoolMatrix1 = new Matrix<>(symBoolArray);
-		Matrix<Boolean> symBoolMatrix2 = new Matrix<>(symBoolArray2);
-		Matrix<Boolean> boolOpMatrix = symBoolMatrix1.directOp(symBoolMatrix2, Matrix.boolOr);
-	
-		 */
 		Server server;
 		try {
 			server = new Server();
@@ -82,7 +30,18 @@ public class Main extends JFrame {
 
 		LoginForm loginForm = new LoginForm();
 		loginForm.setVisible(true);
-		 
+		 */
+		GUI gui = new GUI();
+		BuildingBlock road = new Road(3, true, gui);
+		BuildingBlock curve = new Curve(0, -1,  true, gui);
+		
+		for(int i = -1; i <= 1; i++) {
+			for(int j = -1; j <= 1; j++) {
+				boolean connected = curve.checkConnect(new Pos(i, j), road);
+				System.out.println(connected + " at " + i + " " + j);
+			}
+		}
+	
 		
 		
 	}

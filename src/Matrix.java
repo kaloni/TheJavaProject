@@ -279,6 +279,24 @@ public class Matrix<E> implements Iterable<E> {
 		}
 	}
 	
+	// returns the sum with to some operator over all elements in the matrix
+	public E matrixSum(BinaryOperation<E> opAdd) {
+		
+		E tempSum = get(0,0);
+		
+		// first row, need to do this since we have to set start value to first element
+		for(int c = 1; c < cols; c++) {
+			tempSum = binaryOp(tempSum, get(0,c), opAdd);
+		}
+		for(int r = 1; r < rows; r++) {
+			for(int c = 0; c < cols; c++) {
+				tempSum = binaryOp(tempSum, get(r,c), opAdd);
+			}
+		}
+		
+		return tempSum;
+		
+	}
 	public Matrix<Float> floatMult(Float number) {
 		
 		Matrix<Float> tempMatrix = new Matrix<>(rows, cols);
@@ -429,6 +447,18 @@ public class Matrix<E> implements Iterable<E> {
 			}
 			
 		}
+	}
+	
+	// flips all elements to the "opposite side" of the matrix
+	public void totalFlip() {
+		
+		Matrix<E> tempMatrix = clone();
+		for(int r = 0; r < rows; r++) {
+			for(int c = 0; c < cols; c++) {
+				set(r, c, tempMatrix.get(rows - r - 1, cols- c - 1));
+			}
+		}
+		
 	}
 	
 	

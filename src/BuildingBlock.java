@@ -22,6 +22,8 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	protected boolean diagonal;
 	protected Pos groupOrigin;
 	
+	List<BuildingBlock> connectionList;
+	
 	protected GUI gui;
 	
 	////////// CONSTRUCTORS (2) //////////
@@ -39,6 +41,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		stateList = new ArrayList<>();
 		diagonal = false;
 		groupOrigin = new Pos(0,0);
+		connectionList = new ArrayList<>();
 		
 	}
 	
@@ -56,6 +59,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		stateList = new ArrayList<>();
 		diagonal = false;
 		groupOrigin = new Pos(0,0);
+		connectionList = new ArrayList<>();
 		
 	}
 	
@@ -224,6 +228,120 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	
 	public List<Matrix<Boolean>> getStateList() {
 		return stateList;
+	}
+	
+	// I/O patters is used for checking connectivity with other blocks
+	public Matrix<Boolean> getInputPattern() {
+		
+		Matrix<Boolean> patternMatrix = new Matrix<>(3,3, false);
+		
+		for(int i = 0; i < 4; i++) {
+				
+			if( inputRing.get(i) ) {
+			
+				if( diagonal ) {
+					
+				Pos patternPos = Direction.dirToPos(i);
+				patternPos.setRotationBounds(-1, 1, -1, 1);
+				patternPos.rotate();
+				patternPos.translate(1, 1);
+				patternMatrix.set(patternPos.y, patternPos.x, true);
+					
+				}
+				else {
+					
+				Pos patternPos = Direction.dirToPos(i);
+				patternPos.translate(1,1);
+				// need to flip around x axis because GUI coordinate basis is weird
+				patternMatrix.set(patternPos.y, patternPos.x, true);
+					
+				}
+				
+			}
+		}
+		
+		return patternMatrix;
+		
+	}
+	
+	
+	
+	public Matrix<Boolean> getOutputPattern() {
+		
+		Matrix<Boolean> patternMatrix = new Matrix<>(3,3, false);
+		
+		for(int i = 0; i < 4; i++) {
+				
+			if( outputRing.get(i) ) {
+			
+				if( diagonal ) {
+					
+				Pos patternPos = Direction.dirToPos(i);
+				patternPos.setRotationBounds(-1, 1, -1, 1);
+				patternPos.rotate();
+				patternPos.translate(1, 1);
+				patternMatrix.set(patternPos.y, patternPos.x, true);
+					
+				}
+				else {
+					
+				Pos patternPos = Direction.dirToPos(i);
+				patternPos.translate(1,1);
+				// need to flip around x axis because GUI coordinate basis is weird
+				patternMatrix.set(patternPos.y, patternPos.x, true);
+					
+				}
+				
+			}
+		}
+		
+		return patternMatrix;
+		
+	}
+	
+	public boolean checkConnect(Pos relPos, BuildingBlock block) {
+		
+		Matrix<Boolean> outputPattern = getOutputPattern();
+		Matrix<Boolean> inputPattern = block.getInputPattern();
+		inputPattern.totalFlip();
+		relPos.translate(1, 1);
+		
+		if( connectionList.contains(block) ) {
+			connectionList.remove(block);
+		}
+		
+		Matrix<Boolean> connectPattern = outputPattern.directOp(inputPattern, Matrix.boolAnd);
+		boolean connected = connectPattern.get(relPos.y, relPos.x);
+		
+		return connected;
+		
+	}
+	
+	public boolean connectedTo(BuildingBlock block) {
+		
+		if( connectionList.contains(block) ) {
+			return true;
+		}
+		return false;
+		
+	}
+	
+	public void connectWith(Pos relPos, BuildingBlock block) {
+		
+		if( checkConnect(relPos, block) ) {
+			connectionList.add(block);
+		}
+		
+	}
+	
+	public void clearConnections() {
+		connectionList.clear();
+	}
+	public int connections() {
+		return connectionList.size();
+	}
+	public void removeConnection(BuildingBlock block) {
+		connectionList.remove(block);
 	}
 	
 	// adds a state, makes sure that the connections is updated
