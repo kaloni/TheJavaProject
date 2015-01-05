@@ -16,5 +16,6 @@
 	<classpathentry kind="lib" path="lib/httpcore-4.4.jar"/>
 	<classpathentry kind="lib" path="lib/leveldb-0.7.jar"/>
 	<classpathentry kind="lib" path="lib/leveldb-api-0.7.jar"/>
+	<classpathentry kind="lib" path="/Users/Carl/Documents/Plugg/Java/JARS/CommonsCollections/org.apache.commons.collections.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

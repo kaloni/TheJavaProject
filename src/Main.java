@@ -3,9 +3,12 @@ import view.LoginForm;
 
 import java.awt.BorderLayout;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Random;
 
 import javax.swing.JFrame;
+
+import com.google.common.collect.HashBiMap;
 
 
 public class Main extends JFrame {
@@ -31,6 +34,8 @@ public class Main extends JFrame {
 		LoginForm loginForm = new LoginForm();
 		loginForm.setVisible(true);
 		 */
+		
+		/*
 		GUI gui = new GUI();
 		BuildingBlock road = new Road(3, true, gui);
 		BuildingBlock curve = new Curve(0, -1,  true, gui);
@@ -41,7 +46,38 @@ public class Main extends JFrame {
 				System.out.println(connected + " at " + i + " " + j);
 			}
 		}
-	
+		*/
+		
+		/*
+		GUI gui = new GUI();
+		BlockMap<Pos, BlockGroup> blockMap = new BlockMap<>();
+		BlockGroup.initGroups(gui, blockMap);
+		
+		BlockGroup road = BlockGroup.newLongRoad(1, 1, true);
+		BlockGroup curve = BlockGroup.newCurve(1, true);
+		blockMap.put(new Pos(0,0), road);
+		blockMap.put(new Pos(1,0), curve);
+		
+		PathFinder pathFinder = new PathFinder(blockMap);
+		Matrix<Double> matrix = Matrix.getRandomMatrix(4,10);
+		Integer[] previous = pathFinder.shortestPath(matrix, 1);
+		
+		System.out.println(matrix);
+		for(int i = 0; i < previous.length; i++) {
+			System.out.print(previous[i] + " ");
+		}
+		*/
+		
+		Map<Integer, Pos> biMap = HashBiMap.create();
+		biMap.put(0, new Pos(0, 0));
+		biMap.put(1, new Pos(0, 1));
+		biMap.put(2, new Pos(1, 0));
+		biMap.put(3, new Pos(1, 1));
+		
+		for(int i = 0; i < 4; i++) {
+			System.out.println(biMap.get(i));
+		}
+		
 		
 		
 	}

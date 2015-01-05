@@ -10,6 +10,8 @@ import java.util.Set;
 
 import javax.swing.JPanel;
 
+import com.google.common.collect.HashBiMap;
+
 import processing.core.PApplet;
 import processing.core.PVector;
 
@@ -26,6 +28,7 @@ public class GUI extends PApplet {
 	private boolean runMode;
 	private boolean editMode;
 	private boolean editSetup;
+	private boolean runSetup;
 	private Pos[] editBounds;
 	private int numKey;
 	
@@ -114,12 +117,27 @@ public class GUI extends PApplet {
 	private boolean newClockLink;
 	private List<BlockGroup> blockChangedStateList;
 	
+	/// RUN MODE ////
+	CarSimulator carSimulator;
+	HashMap<Pos, CarArea> carAreaMap;
+	private long time;
+	// precision in millis
+	private final long runModePrecision = 100;
+	private float carSize = 5;
+	CarArea source;
+	CarArea dest;
+	CarArea dest2;
+	
 	///////// ////////// ///////////
 	
 	// TODO : implement the panel
 	private SidePanel sidePanel;
 	
 	public void setup() {
+		
+		// runMode
+		runSetup = true;
+		carAreaMap = new HashMap<>();
 		
 		width = 1000;
 		height = 1000;
@@ -197,7 +215,13 @@ public class GUI extends PApplet {
 		clockList.add(masterClock);
 		clockMap.put(masterClock.pos(), masterClock);
 		
-		
+		// run mode
+		source = new CarArea(new Pos(5,5), 1);
+		dest = new CarArea(new Pos(10,10), 1);
+		dest2 = new CarArea(new Pos(10, 5), 1);
+		carAreaMap.put(source.pos(), source);
+		carAreaMap.put(dest.pos(), dest);
+		carAreaMap.put(dest2.pos(), dest2);
 	}
 	
 	public void draw() {
@@ -210,18 +234,8 @@ public class GUI extends PApplet {
 		*/
 		mousePos.x = scaleConverter(mouseX);
 		mousePos.y = scaleConverter(mouseY);
-		if( runMode ) {
-			noLoop();
-			PathFinder pathFinder = new PathFinder(blockMap);
-			pathFinder.constructMatrix();
-			System.out.println(pathFinder.getMatrix());
-			HashMap<Integer, Pos> indexMap = pathFinder.getIndexMap();
-			for(Integer intKey : indexMap.keySet()) {
-				System.out.println(indexMap.get(intKey));
-			}
-			
-		}
-		else if( editMode ) {
+		
+		if( editMode ) {
 			
 			// do some calculations on how to put the blocks in edit mode, depending on their positions
 			if( editSetup ) {
@@ -305,7 +319,8 @@ public class GUI extends PApplet {
 		}
 		else {
 			
-			background(backgroundColor[0],backgroundColor[1],backgroundColor[2]);
+			background(backgroundColor[0],backgroundColor[1],backgroundColor[2]);	
+			drawCarAreas();
 			
 			// draw all in blockMap
 			for( Map.Entry<Pos, BlockGroup> blockEntry : mapSet ) {
@@ -345,7 +360,63 @@ public class GUI extends PApplet {
 		}
 		
 		drawRunButton();
-		// same in both build and edit
+		
+		if( runMode ) {
+			
+			/*
+			if( clicked ) {
+			PathFinder pathFinder = new PathFinder(blockMap);
+			pathFinder.constructMatrix();
+			//HashMap<Integer, Pos> indexMap = pathFinder.getIndexMap();
+			HashBiMap<Integer, Pos> indexMap = pathFinder.getIndexMap();
+			Integer[] recursivePath = pathFinder.shortestPath(pathFinder.getMatrix(), new Pos(0, 0));
+			//System.out.println(pathFinder.getMatrix());
+			/*
+			for(Integer intKey : indexMap.keySet()) {
+				System.out.println(indexMap.get(intKey));
+			}
+			*/
+			/*
+			for(int i = 0; i < pathFinder.getMatrix().rows(); i++) {
+				System.out.println(indexMap.get(i) + " --> " + indexMap.get(recursivePath[i]));
+			}
+			*/
+			/*
+			for(int i = 0; i < pathFinder.getMatrix().rows(); i++) {
+				System.out.print(recursivePath[i] + " ");
+			}
+			System.out.println();
+			*/
+			/*
+			List<Pos> path = pathFinder.toPath(recursivePath, new Pos(3,3));
+			System.out.println();
+			System.out.println(path);
+			}
+			
+			clicked = false;
+			runMode = false;
+			*/
+			
+			// setup run mode, instantiate car simulator
+			
+			if( runSetup ) {
+				
+				carSimulator = new CarSimulator(blockMap, this);
+				source.setParent(carSimulator);
+				dest.setParent(carSimulator);
+				dest2.setParent(carSimulator);
+				source.mapAreaToInterval(dest, new Long(1000));
+				source.mapAreaToInterval(dest2, new Long(700));
+				carSimulator.addCarArea(source);
+				carSimulator.addCarArea(dest);
+				carSimulator.addCarArea(dest2);
+				runSetup = false;
+				time = System.currentTimeMillis();
+			}
+			
+			carSimulator.simulate();
+			
+		}
 		
 	}
 	
@@ -389,6 +460,23 @@ public class GUI extends PApplet {
 		bendedRoadScaleX[3] = blockScale/bendedRoadFactor;
 		bendedRoadScaleY[0] = blockScale/bendedRoadFactor;
 		bendedRoadScaleY[2] = blockScale/bendedRoadFactor;
+		
+	}
+	
+	public void drawCarAreas() {
+		
+		for(Map.Entry<Pos, CarArea> areaEntry : carAreaMap.entrySet() ) {
+			
+			fill(0,0,255);
+			rect(blockScale*areaEntry.getKey().x, blockScale*areaEntry.getKey().y, blockScale*areaEntry.getValue().size(), blockScale*areaEntry.getValue().size());
+			
+		}
+		
+	}
+	
+	public void drawCar(PVector mapPos) {
+		
+		ellipse(blockScale*(mapPos.x + 0.5f), blockScale*(mapPos.y + 0.5f), carSize, carSize);
 		
 	}
 	
@@ -675,7 +763,6 @@ public class GUI extends PApplet {
 		
 		if( editMode ) {
 			editKeyPressed();
-			
 		}
 		else {
 			buildKeyPressed();
@@ -754,7 +841,6 @@ public class GUI extends PApplet {
 	}
 	
 	public void buildKeyPressed() {
-		
 		// p test key
 		if( key == 'p') {
 			if( currentFocus != null) {
@@ -769,6 +855,8 @@ public class GUI extends PApplet {
 			editMode = !editMode;
 			editSetup = true;
 		}
+		// have not implemented zooming, this is probably a very bad way to do it anyways
+		/*
 		if( keyCode == UP ) {
 			blockScale = 1.1f*blockScale;
 			roadScale = 1.1f*roadScale;
@@ -779,6 +867,7 @@ public class GUI extends PApplet {
 			roadScale = roadScale/1.1f;
 			updateOffsets();
 		}
+		*/
 		// they option to choose road size is no implemented yet
 		/*
 		if( key == '1' || key == '2' || key == '3' || key == '4' ) {
@@ -1100,14 +1189,32 @@ public class GUI extends PApplet {
 			if( blockMap.put(mousePos, newFocus) != null ) {
 				
 				if( keyPressed && keyCode == SHIFT ) {
+					
+					// Add neighbors (with SHIFT pressed)
+					Pos posFocus = blockMap.getKey(newFocus);
+					int focusX = posFocus.x;
+					int focusY = posFocus.y;
+					for(int x = focusX - 1; x <= focusX + 1; x++) {
+						for(int y = focusY - 1; y <= focusY + 1; y++) {
+							
+							BlockGroup blockNeighbor = blockMap.get(new Pos(x,y));
+								
+							if( !(x == focusX && y == focusY) && blockNeighbor != null) {
+								newFocus.addNeighbor(new Pos(x - focusX, y - focusY), blockNeighbor);
+								blockNeighbor.addNeighbor(new Pos(focusX - x, focusY - y), newFocus);
+							}
+							
+						}
+					}
+					
 					newFocus = newFocus.clone();
+					
 				}
 				else {
 					
 					currentFocus = newFocus;
 					focusMap.put(mousePos,currentFocus);
 					newFocus = null;
-					
 					// Add neighbors
 					Pos posFocus = blockMap.getKey(currentFocus);
 					int focusX = posFocus.x;

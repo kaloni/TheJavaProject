@@ -1,6 +1,6 @@
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
+import java.lang.reflect.Array;
 
 public class Matrix<E> implements Iterable<E> {
 	
@@ -65,6 +65,24 @@ public class Matrix<E> implements Iterable<E> {
 	
 	///////////////////////////////////////////////////////////////////////
 	
+	// get square random matrix<double>
+	public static Matrix<Double> getRandomMatrix(int size, double max) {
+		
+		Double[][] randomMatrix = new Double[size][size];
+		
+		for(int i = 0; i < size; i++) {
+			
+			for(int j = 0; j < size; j++) {
+				
+				randomMatrix[i][j] = (Double) max*Math.random();
+		
+			}
+		}
+		
+		return new Matrix<Double>(randomMatrix);
+		
+	}
+	
 	public MatrixIterator iterator() {
 		return new MatrixIterator();
 	}
@@ -127,7 +145,7 @@ public class Matrix<E> implements Iterable<E> {
 		}
 	}
 
-	public E[] getRow(int r) {
+	public E[] getRow(int r) throws IndexOutOfBoundsException {
 		E[] row = (E[]) new Object[cols];
 		if( r < rows && r >= 0) {
 			for(int c = 0; c < cols; c++) {

@@ -1,19 +1,29 @@
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
+import org.apache.commons.collections.BidiMap;
+
+import com.google.common.collect.HashBiMap;
 
 public class PathFinder {
 
 	private BlockMap<Pos, BuildingBlock> blockMap;
 	private Matrix<Double> blockMatrix;
-	private HashMap<Integer, Pos> indexMap;
+	//private HashMap<Integer, Pos> indexMap;
+	private HashBiMap<Integer, Pos> indexMap;
 	
 	public PathFinder(BlockMap<Pos, BlockGroup> blockMap) {
 		
 		blockMap.removeDummy();
 		this.blockMap = mapTypeConverter(blockMap);
-		indexMap = new HashMap<>();
+		indexMap = HashBiMap.create();
+		//indexMap = new HashMap<>();
+		constructMatrix();
 		
 	}
 	
@@ -21,9 +31,16 @@ public class PathFinder {
 		return blockMatrix;
 	}
 	
+	/*
 	public HashMap<Integer, Pos> getIndexMap() {
 		return indexMap;
 	}
+	*/
+	
+	public HashBiMap<Integer, Pos> getIndexMap() {
+		return indexMap;
+	}
+	
 	
 	public BlockMap<Pos, BuildingBlock> mapTypeConverter(BlockMap<Pos, BlockGroup> blockGroupMap) {
 		
@@ -95,88 +112,108 @@ public class PathFinder {
 		
 	}
 	
-	/*
-	public boolean connected(Pos pos1, BuildingBlock block1, Pos pos2, BuildingBlock block2) {
+	// need to set return type of Matrx.getRow as Object[]
+	// and then convert to Double[] using Arrays
+	// this might be solved by using java reflection
+	// Returs a "recursive path" which can be used to get the shortest path to any other block from the "fromPos"
+	// A sequence of Pos is retrieved by calling toPath on the "recursive path" returned from this methods
+	// with a corresponding destination
+	
+	//public Integer[] shortestPath(Matrix<Double> connections, Pos fromPos) {
+	// blockMatrix --> connections
+	public Integer[] shortestPath(Pos fromPos) {
 		
-		DataRing<Boolean> input1 = block1.getInputRing();
-		DataRing<Boolean> input2 = block2.getInputRing();
-		DataRing<Boolean> output1 = block1.getOutputRing();
-		DataRing<Boolean> output2 = block2.getOutputRing();
+		Integer fromNodeNum = indexMap.inverse().get(fromPos);
+		Double[] dist = new Double[blockMatrix.cols()];
+		Integer[] previous = new Integer[blockMatrix.cols()];
+		List<Integer> unvisited = new ArrayList<>();
 		
-		Pos posDiff = pos1.sub(pos2);
-		double dist = posDiff.abs();
-		int dirDiff = Direction.posToDir(posDiff);
-		
-		// if itself
-		if( Pos.dist(pos1, pos2) == 0) {
-			return true;
+		for(int i = 0; i < blockMatrix.cols(); i++ ) {
+			dist[i] = Double.POSITIVE_INFINITY;
+			previous[i] = -1;
+			unvisited.add(i);
 		}
-		// if no block is bended
-		else if( !(block1 instanceof BendedRoad) && !(block2 instanceof BendedRoad) ) {
-			
-			if( (dist == Math.sqrt(2) && block1.isDiagonal() && block2.isDiagonal()) || (dist == 1 && !(block1.isDiagonal()) && !(block2.isDiagonal())) ) {
-			
-				switch(dirDiff) {
-				case(Direction.NORTH):
-					return (input1.get(Direction.SOUTH) && output2.get(Direction.NORTH)) || (output1.get(Direction.SOUTH) && input2.get(Direction.NORTH));
-				case(Direction.EAST):
-					return (input1.get(Direction.WEST) && output2.get(Direction.EAST)) || (output1.get(Direction.WEST) && input2.get(Direction.EAST));
-				case(Direction.SOUTH):
-					return (input1.get(Direction.NORTH) && output2.get(Direction.SOUTH)) || (output1.get(Direction.NORTH) && input2.get(Direction.SOUTH));
-				case(Direction.WEST):
-					return (input1.get(Direction.EAST) && output2.get(Direction.WEST)) || (output1.get(Direction.EAST) && input2.get(Direction.WEST));
-				
-				}
-			
-			}
 		
-		}
-		// else if one is bended
-		else if( (block1 instanceof BendedRoad) && !(block2 instanceof BendedRoad) || !(block1 instanceof BendedRoad) && (block2 instanceof BendedRoad) ) {
+		dist[fromNodeNum] = 0d;
+		
+		while( ! unvisited.isEmpty() ) {
 			
-			BuildingBlock bendedBlock = (block1 instanceof BendedRoad) ? block1 : block2;
-			BuildingBlock ortoBlock = (block1 instanceof BendedRoad) ? block2 : block1;
-			
-			if( (dist == Math.sqrt(2) && !(bendedBlock.isDiagonal()) && ortoBlock.isDiagonal()) || (dist == 1 && bendedBlock.isDiagonal() && !(ortoBlock.isDiagonal())) ) {
-				
-				
-				
+			Integer currentNode = minIndex(dist, unvisited);
+			// if no more connected nodes, break
+			if(currentNode == -1) {
+				break;
 			}
 			
-		}
-		// else if both are bended
-		else if( block1 instanceof BendedRoad && block2 instanceof BendedRoad ) {
+			Object[] nextDistObj = blockMatrix.getRow(currentNode);
+			Double[] nextDist = Arrays.copyOf(nextDistObj, nextDistObj.length, Double[].class);
 			
-			// just either may be diagonal
-			if( block1.isDiagonal() && !block2.isDiagonal() || !block1.isDiagonal() && block2.isDiagonal() ) {
-				
-				BuildingBlock diagBlock = block1.isDiagonal() ? block1 : block2;
-				BuildingBlock ortoBlock = block1.isDiagonal() ? block2 : block1;
-				input1 = diagBlock.getInputRing();
-				input2 = ortoBlock.getInputRing();
-				output1 = diagBlock.getOutputRing();
-				output2 = ortoBlock.getOutputRing();
-				
-				switch(dirDiff) {
-				case(Direction.NORTH):
-					return (input1.get(Direction.SOUTH) && output2.get(Direction.NORTH)) || (output1.get(Direction.SOUTH) && input2.get(Direction.NORTH));
-				case(Direction.EAST):
-					return (input1.get(Direction.WEST) && output2.get(Direction.EAST)) || (output1.get(Direction.WEST) && input2.get(Direction.EAST));
-				case(Direction.SOUTH):
-					return (input1.get(Direction.NORTH) && output2.get(Direction.SOUTH)) || (output1.get(Direction.NORTH) && input2.get(Direction.SOUTH));
-				case(Direction.WEST):
-					return (input1.get(Direction.EAST) && output2.get(Direction.WEST)) || (output1.get(Direction.EAST) && input2.get(Direction.WEST));
-				
+			for(int i = 0; i < blockMatrix.cols(); i++) {
+				// if neighbor
+				if( nextDist[i] < Double.POSITIVE_INFINITY ) {
+					
+					Double altDist = dist[currentNode] + nextDist[i];
+					if( altDist < dist[i] ) {
+						
+						dist[i] = altDist;
+						previous[i] = currentNode;
+						
+					}
+					
 				}
 				
 			}
 			
+			unvisited.remove(currentNode);
+			
 		}
 		
-		return false;
+		return previous;
 		
 	}
-	*/
+	
+	public int minIndex(Double[] distance, List<Integer> restriction) {
+		
+		int minIndex = -1;
+		Double min = Double.POSITIVE_INFINITY;
+
+		for(int i = 0; i < distance.length; i++) {
+			
+			if( distance[i] < min && restriction.contains(i) ) {
+				min = distance[i];
+				minIndex = i;
+			}
+			
+		}
+		
+		return minIndex;
+		
+	}
+	
+	public List<Pos> toPath(Integer[] nodePath, Pos dest) {
+	
+		List<Pos> path = new ArrayList<>();
+		Map<Pos, Integer> nodeMap = indexMap.inverse();
+		Integer nodeDest = nodeMap.get(dest);
+		Stack<Pos> stack = new Stack();
+		
+		while( nodeDest != -1 ) {
+			
+			stack.push(indexMap.get(nodeDest));
+			nodeDest = nodePath[nodeDest];
+			
+		}
+		
+		while( ! stack.isEmpty() ) {
+			
+			Pos nextPos = stack.pop();
+			path.add(nextPos);
+			
+		}
+		
+		return path;
+		
+	}
+	
 	
 
 }
