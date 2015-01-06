@@ -19,19 +19,31 @@ public class BendedRoad extends Curve {
 				
 			if( outputRing.get(i) ) {
 			
-				if( diagonal ) {
-					
 				Pos patternPos = Direction.dirToPos(i);
 				patternPos.setRotationBounds(-1, 1, -1, 1);
+				
+				if( reverted && flipped ) {
+					//patternPos.rotate(6);
+					//patternPos.rotate(0);
+				}
+				else if( (reverted && ! flipped) || flipped ) {
+					patternPos.rotate(6);
+				}
+				
+				if( diagonal ) {
+				
+				//Pos patternPos = Direction.dirToPos(i);
+				//patternPos.setRotationBounds(-1, 1, -1, 1);
 				patternPos.rotate(2);
 				patternPos.translate(1, 1);
 				patternMatrix.set(patternPos.y, patternPos.x, true);
 					
 				}
+				
 				else {
 					
-				Pos patternPos = Direction.dirToPos(i);
-				patternPos.setRotationBounds(-1, 1, -1, 1);
+				//Pos patternPos = Direction.dirToPos(i);
+				//patternPos.setRotationBounds(-1, 1, -1, 1);
 				patternPos.rotate();
 				patternPos.translate(1,1);
 				// need to flip around x axis because GUI coordinate basis is weird
@@ -45,8 +57,6 @@ public class BendedRoad extends Curve {
 		return patternMatrix;
 		
 	}
-	
-	
 	
 	
 	@Override
@@ -80,19 +90,41 @@ public class BendedRoad extends Curve {
 	@Override
 	public void revert() {
 		
-		if( reverted ) {
-			for(int i = 0; i < 5; i++) {
-				rotate();
-			}
-		}
-		else {
-			for(int i = 0; i < 3; i++) {
-				rotate();
-			}
-		}
-		flip();
-		reverted = !reverted;
 		
+		if( flipped ) {
+			
+			if( reverted ) {
+				for(int i = 0; i < 3; i++) {
+					rotate();
+				}
+			}
+			else {
+				for(int i = 0; i < 5; i++) {
+					rotate();
+				}
+			}
+			flip();
+			flipped = true;
+			reverted = !reverted;
+			
+			
+		}
+		
+		else {
+			if( reverted ) {
+				for(int i = 0; i < 5; i++) {
+					rotate();
+				}
+			}
+			else {
+				for(int i = 0; i < 3; i++) {
+					rotate();
+				}
+			}
+			flip();
+			flipped = false;
+			reverted = !reverted;
+		}
 		
 	}
 	

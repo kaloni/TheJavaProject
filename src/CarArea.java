@@ -11,16 +11,16 @@ import java.util.Map;
 public class CarArea {
 
 	private Pos pos;
-	private int size;
+	private int[] color;
 	private HashMap<CarArea, Long> intervalMap;
 	private HashMap<Long, Long> clock;
 	private CarSimulator parent;
 	
-	public CarArea(Pos pos, int size) {
+	public CarArea(Pos pos, int[] color) {
 		
 		this.parent = parent;
 		this.pos = pos;
-		this.size = size;
+		this.color = color;
 		intervalMap = new HashMap<>();
 		clock = new HashMap<>();
 		
@@ -34,14 +34,11 @@ public class CarArea {
 	public Pos pos() {
 		return pos;
 	}
-	public int size() {
-		return size;
+	public int[] color() {
+		return color;
 	}
 	public void setPos(Pos pos) {
 		this.pos = pos;
-	}
-	public void setSize(int size) {
-		this.size = size;
 	}
 	
 	public Long getTimeInterval(CarArea dest) {

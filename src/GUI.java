@@ -216,9 +216,14 @@ public class GUI extends PApplet {
 		clockMap.put(masterClock.pos(), masterClock);
 		
 		// run mode
-		source = new CarArea(new Pos(5,5), 1);
-		dest = new CarArea(new Pos(10,10), 1);
-		dest2 = new CarArea(new Pos(10, 5), 1);
+		int[] randomColor = {(int)random(255), (int)random(255), (int) random(255)};
+		source = new CarArea(new Pos(5,5), randomColor);
+		randomColor = new int[3];
+		randomColor[0] = (int) random(255); randomColor[1] = (int) random(255); randomColor[2] = (int) random(255);
+		dest = new CarArea(new Pos(10,10), randomColor);
+		randomColor = new int[3];
+		randomColor[0] = (int) random(255); randomColor[1] = (int) random(255); randomColor[2] = (int) random(255);
+		dest2 = new CarArea(new Pos(10, 5), randomColor);
 		carAreaMap.put(source.pos(), source);
 		carAreaMap.put(dest.pos(), dest);
 		carAreaMap.put(dest2.pos(), dest2);
@@ -407,6 +412,8 @@ public class GUI extends PApplet {
 				dest2.setParent(carSimulator);
 				source.mapAreaToInterval(dest, new Long(1000));
 				source.mapAreaToInterval(dest2, new Long(700));
+				dest.mapAreaToInterval(dest2, new Long(2000));
+				dest2.mapAreaToInterval(dest, new Long(3000));
 				carSimulator.addCarArea(source);
 				carSimulator.addCarArea(dest);
 				carSimulator.addCarArea(dest2);
@@ -467,8 +474,9 @@ public class GUI extends PApplet {
 		
 		for(Map.Entry<Pos, CarArea> areaEntry : carAreaMap.entrySet() ) {
 			
-			fill(0,0,255);
-			rect(blockScale*areaEntry.getKey().x, blockScale*areaEntry.getKey().y, blockScale*areaEntry.getValue().size(), blockScale*areaEntry.getValue().size());
+			int[] areaColor = areaEntry.getValue().color();
+			fill(areaColor[0], areaColor[1], areaColor[2]);
+			rect(blockScale*areaEntry.getKey().x, blockScale*areaEntry.getKey().y, blockScale, blockScale);
 			
 		}
 		
@@ -845,7 +853,15 @@ public class GUI extends PApplet {
 		if( key == 'p') {
 			if( currentFocus != null) {
 				System.out.println(currentFocus.getBlock().connections());
+				//System.out.println(currentFocus.getBlock().getInputPattern());
+				//System.out.println(currentFocus.getBlock().getOutputPattern());
 			}
+		}
+		if( key == 'o' ) {
+			System.out.println(currentFocus.getBlock().getOutputPattern());
+		}
+		if( key == 'i' ) {
+			System.out.println(currentFocus.getBlock().getInputPattern());
 		}
 		// if pressing anything except SHIFT, TAB or D makes all focus disappear
 		if( keyCode != SHIFT && keyCode != TAB && keyCode != UP && key != 'd' && key != 'r' && key != 'f' && key != 'v' && key != ' ') {
