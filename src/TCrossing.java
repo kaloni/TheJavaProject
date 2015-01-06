@@ -23,9 +23,10 @@ public class TCrossing extends BuildingBlock {
 			curve.revert();
 		}
 		
+		// removeState(0), when the redLight order is reversed in road and curve
 		if( redLight ) {
-			road.removeState(0);
-			curve.removeState(0);
+			road.removeState(1);
+			curve.removeState(1);
 			tempT_crossing = blockSum(road,curve);
 		}
 		else {

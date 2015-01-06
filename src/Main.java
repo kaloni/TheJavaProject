@@ -3,6 +3,8 @@ import view.LoginForm;
 
 import java.awt.BorderLayout;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -68,6 +70,7 @@ public class Main extends JFrame {
 		}
 		*/
 		
+		/*
 		Map<Integer, Pos> biMap = HashBiMap.create();
 		biMap.put(0, new Pos(0, 0));
 		biMap.put(1, new Pos(0, 1));
@@ -77,8 +80,10 @@ public class Main extends JFrame {
 		for(int i = 0; i < 4; i++) {
 			System.out.println(biMap.get(i));
 		}
+		*/
 		
-		
+		List<Integer> list1 = new ArrayList();
+		List<Integer> list2 = new ArrayList();
 		
 	}
 	

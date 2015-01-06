@@ -124,9 +124,11 @@ public class GUI extends PApplet {
 	// precision in millis
 	private final long runModePrecision = 100;
 	private float carSize = 5;
-	CarArea source;
-	CarArea dest;
-	CarArea dest2;
+	boolean allAreasConnected;
+	CarArea area1;
+	CarArea area2;
+	CarArea area3;
+	CarArea area4;
 	
 	///////// ////////// ///////////
 	
@@ -210,26 +212,35 @@ public class GUI extends PApplet {
 		clockLinkMap = new HashMap<BlockGroup, Clock>();
 		blockChangedStateList = new ArrayList<>();
 		
-		Clock masterClock = new Clock(new Pos(0,0), 100);
+		Clock masterClock = new Clock(new Pos(0,0), 1000);
 		clockList = new ArrayList<>();
 		clockList.add(masterClock);
 		clockMap.put(masterClock.pos(), masterClock);
 		
 		// run mode
-		int[] randomColor = {(int)random(255), (int)random(255), (int) random(255)};
-		source = new CarArea(new Pos(5,5), randomColor);
-		randomColor = new int[3];
-		randomColor[0] = (int) random(255); randomColor[1] = (int) random(255); randomColor[2] = (int) random(255);
-		dest = new CarArea(new Pos(10,10), randomColor);
-		randomColor = new int[3];
-		randomColor[0] = (int) random(255); randomColor[1] = (int) random(255); randomColor[2] = (int) random(255);
-		dest2 = new CarArea(new Pos(10, 5), randomColor);
-		carAreaMap.put(source.pos(), source);
-		carAreaMap.put(dest.pos(), dest);
-		carAreaMap.put(dest2.pos(), dest2);
+		
+		area1 = new CarArea(new Pos(10,5));
+		area2 = new CarArea(new Pos(5,10));
+		area3 = new CarArea(new Pos(15,10));
+		area4 = new CarArea(new Pos(10,15));
+		
+		carAreaMap.put(area1.pos(), area1);
+		carAreaMap.put(area2.pos(), area2);
+		//carAreaMap.put(area3.pos(), area4);
+		//carAreaMap.put(area4.pos(), area4);
+		
+		for(CarArea carArea : carAreaMap.values()) {
+			
+			int[] randomColor = {(int)random(255), (int)random(255), (int) random(255)};
+			carArea.setColor(randomColor);
+			
+		}
+		
 	}
 	
 	public void draw() {
+		
+		clockCount();
 		
 		// maybe some scaling alternatives would be nice?
 		/*
@@ -310,7 +321,9 @@ public class GUI extends PApplet {
 				
 			}
 			for(Map.Entry<BlockGroup, Clock> clockBlockEntry : clockLinkMap.entrySet()) {
-				drawClockLink(focusMap.getKey(clockBlockEntry.getKey()), clockBlockEntry.getValue().pos());
+				if( focusMap.getKey(clockBlockEntry.getKey()) != null ) {
+					drawClockLink(focusMap.getKey(clockBlockEntry.getKey()), clockBlockEntry.getValue().pos());
+				}
 			}
 			if( newLink ) {
 				drawNewLink();
@@ -368,60 +381,58 @@ public class GUI extends PApplet {
 		
 		if( runMode ) {
 			
-			/*
-			if( clicked ) {
-			PathFinder pathFinder = new PathFinder(blockMap);
-			pathFinder.constructMatrix();
-			//HashMap<Integer, Pos> indexMap = pathFinder.getIndexMap();
-			HashBiMap<Integer, Pos> indexMap = pathFinder.getIndexMap();
-			Integer[] recursivePath = pathFinder.shortestPath(pathFinder.getMatrix(), new Pos(0, 0));
-			//System.out.println(pathFinder.getMatrix());
-			/*
-			for(Integer intKey : indexMap.keySet()) {
-				System.out.println(indexMap.get(intKey));
-			}
-			*/
-			/*
-			for(int i = 0; i < pathFinder.getMatrix().rows(); i++) {
-				System.out.println(indexMap.get(i) + " --> " + indexMap.get(recursivePath[i]));
-			}
-			*/
-			/*
-			for(int i = 0; i < pathFinder.getMatrix().rows(); i++) {
-				System.out.print(recursivePath[i] + " ");
-			}
-			System.out.println();
-			*/
-			/*
-			List<Pos> path = pathFinder.toPath(recursivePath, new Pos(3,3));
-			System.out.println();
-			System.out.println(path);
-			}
-			
-			clicked = false;
-			runMode = false;
-			*/
-			
-			// setup run mode, instantiate car simulator
-			
 			if( runSetup ) {
 				
 				carSimulator = new CarSimulator(blockMap, this);
-				source.setParent(carSimulator);
-				dest.setParent(carSimulator);
-				dest2.setParent(carSimulator);
-				source.mapAreaToInterval(dest, new Long(1000));
-				source.mapAreaToInterval(dest2, new Long(700));
-				dest.mapAreaToInterval(dest2, new Long(2000));
-				dest2.mapAreaToInterval(dest, new Long(3000));
-				carSimulator.addCarArea(source);
-				carSimulator.addCarArea(dest);
-				carSimulator.addCarArea(dest2);
-				runSetup = false;
+				
+				for(CarArea carArea : carAreaMap.values()) {
+					
+					carArea.setParent(carSimulator);
+					carSimulator.addCarArea(carArea);
+					
+					for(CarArea otherCarArea : carAreaMap.values()) {
+						
+						if( carArea != otherCarArea ) {
+							
+							Long randomSpawnTime = new Long((int) random(3000));
+							carArea.mapAreaToInterval(otherCarArea, randomSpawnTime);
+							System.out.println(randomSpawnTime);
+							
+						}
+						
+					}
+					
+				}
+				
 				time = System.currentTimeMillis();
+				runSetup = false;
+				
+				// check if everything is connected
+				allAreasConnected = true;
+				pathBreak:
+				for(CarArea source : carAreaMap.values() ) {
+					
+					for(CarArea dest : source.destinationSet()) {
+						
+						if( ! carSimulator.hasPath(source.pos(), dest.pos()) ) {
+							System.out.println("noPath");
+							allAreasConnected = false;
+							runMode = false;
+							resetClocks();
+							break pathBreak;
+							
+						}
+						
+					}
+					
+				}
+					
+
 			}
 			
-			carSimulator.simulate();
+			if( allAreasConnected ) {
+				carSimulator.simulate();
+			}
 			
 		}
 		
@@ -498,6 +509,22 @@ public class GUI extends PApplet {
 		
 	}
 	
+	public void resetClocks() {
+		
+		for(Clock clock : clockList) {
+			clock.reset();
+		}
+		
+	}
+	
+	public void clockCount() {
+		
+		for(Clock clock : clockList) {
+			clock.count();
+		}
+		
+	}
+	
 	public void drawEditClocks() {
 		
 		noFill();
@@ -505,7 +532,6 @@ public class GUI extends PApplet {
 		for(Clock clock : clockList) {
 			translate(editBlockScale*clock.pos().x, editBlockScale*clock.pos().y);
 			drawClock(clock);
-			clock.count();
 			translate(- editBlockScale*clock.pos().x, - editBlockScale*clock.pos().y);
 		}
 		
@@ -1108,6 +1134,8 @@ public class GUI extends PApplet {
 		if( width - runButtonScaleX - mouseX <= 0 && mouseY <= runButtonScaleY ) {
 			
 			runMode = true;
+			runSetup = true;
+		
 			
 		}
 		else if( editMode ) { 

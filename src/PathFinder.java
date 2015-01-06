@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public class PathFinder {
 		indexMap = HashBiMap.create();
 		//indexMap = new HashMap<>();
 		constructMatrix();
-		
+	
 	}
 	
 	public Matrix<Double> getMatrix() {
@@ -112,6 +113,30 @@ public class PathFinder {
 		
 	}
 	
+	public boolean hasPath(Pos from, Pos to) {
+		
+		Integer[] recursePath = shortestPath(from);
+		// if the start and end block exists
+		if( recursePath != null && indexMap.containsValue(to) ) {
+			
+			if( recursePath[indexMap.inverse().get(to)] != -1 ) {
+				return true;
+			}
+			
+		}
+		
+		return false;
+		
+	}
+	
+	public List<Pos> getPath(Pos from, Pos to) {
+		
+		if( hasPath(from, to) ) {
+			return toPath(shortestPath(from), to);
+		}
+		return null;
+	}
+	
 	// need to set return type of Matrx.getRow as Object[]
 	// and then convert to Double[] using Arrays
 	// this might be solved by using java reflection
@@ -124,50 +149,57 @@ public class PathFinder {
 	public Integer[] shortestPath(Pos fromPos) {
 		
 		Integer fromNodeNum = indexMap.inverse().get(fromPos);
-		Double[] dist = new Double[blockMatrix.cols()];
-		Integer[] previous = new Integer[blockMatrix.cols()];
-		List<Integer> unvisited = new ArrayList<>();
-		
-		for(int i = 0; i < blockMatrix.cols(); i++ ) {
-			dist[i] = Double.POSITIVE_INFINITY;
-			previous[i] = -1;
-			unvisited.add(i);
-		}
-		
-		dist[fromNodeNum] = 0d;
-		
-		while( ! unvisited.isEmpty() ) {
+		// if the startpos exists
+		if( fromNodeNum != null) {
 			
-			Integer currentNode = minIndex(dist, unvisited);
-			// if no more connected nodes, break
-			if(currentNode == -1) {
-				break;
+			Double[] dist = new Double[blockMatrix.cols()];
+			Integer[] previous = new Integer[blockMatrix.cols()];
+			List<Integer> unvisited = new ArrayList<>();
+			
+			for(int i = 0; i < blockMatrix.cols(); i++ ) {
+				dist[i] = Double.POSITIVE_INFINITY;
+				previous[i] = -1;
+				unvisited.add(i);
 			}
 			
-			Object[] nextDistObj = blockMatrix.getRow(currentNode);
-			Double[] nextDist = Arrays.copyOf(nextDistObj, nextDistObj.length, Double[].class);
+			dist[fromNodeNum] = 0d;
 			
-			for(int i = 0; i < blockMatrix.cols(); i++) {
-				// if neighbor
-				if( nextDist[i] < Double.POSITIVE_INFINITY ) {
-					
-					Double altDist = dist[currentNode] + nextDist[i];
-					if( altDist < dist[i] ) {
+			while( ! unvisited.isEmpty() ) {
+				
+				Integer currentNode = minIndex(dist, unvisited);
+				// if no more connected nodes, break
+				if(currentNode == -1) {
+					break;
+				}
+				
+				Object[] nextDistObj = blockMatrix.getRow(currentNode);
+				Double[] nextDist = Arrays.copyOf(nextDistObj, nextDistObj.length, Double[].class);
+				
+				for(int i = 0; i < blockMatrix.cols(); i++) {
+					// if neighbor
+					if( nextDist[i] < Double.POSITIVE_INFINITY ) {
 						
-						dist[i] = altDist;
-						previous[i] = currentNode;
+						Double altDist = dist[currentNode] + nextDist[i];
+						if( altDist < dist[i] ) {
+							
+							dist[i] = altDist;
+							previous[i] = currentNode;
+							
+						}
 						
 					}
 					
 				}
 				
+				unvisited.remove(currentNode);
+				
 			}
 			
-			unvisited.remove(currentNode);
-			
+			return previous;
+		
 		}
 		
-		return previous;
+		return null;
 		
 	}
 	
@@ -190,7 +222,7 @@ public class PathFinder {
 	}
 	
 	public List<Pos> toPath(Integer[] nodePath, Pos dest) {
-	
+		
 		List<Pos> path = new ArrayList<>();
 		Map<Pos, Integer> nodeMap = indexMap.inverse();
 		Integer nodeDest = nodeMap.get(dest);

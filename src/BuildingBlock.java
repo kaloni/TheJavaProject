@@ -230,6 +230,53 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		return stateList;
 	}
 	
+	// TODO : this should be used in getInputPattern and getOutputPattern as well
+	private Matrix<Boolean> getPatternMatrix(DataRing<Boolean> ring) {
+		
+		Matrix<Boolean> patternMatrix = new Matrix<>(3,3, false);
+		
+		for(int i = 0; i < 4; i++) {
+			
+			if( ring.get(i) ) {
+			
+				if( diagonal ) {
+					
+				Pos patternPos = Direction.dirToPos(i);
+				patternPos.setRotationBounds(-1, 1, -1, 1);
+				patternPos.rotate();
+				patternPos.translate(1, 1);
+				patternMatrix.set(patternPos.y, patternPos.x, true);
+					
+				}
+				else {
+					
+				Pos patternPos = Direction.dirToPos(i);
+				patternPos.translate(1,1);
+				// need to flip around x axis because GUI coordinate basis is weird
+				patternMatrix.set(patternPos.y, patternPos.x, true);
+					
+				}
+				
+			}
+		}
+		
+		return patternMatrix;
+		
+	}
+	
+	public Matrix<Boolean> getCurrentInputPattern() {
+		
+		Matrix<Boolean> patternMatrix = new Matrix<>(3,3, false);
+		DataRing<Boolean> currentInputRing = new DataRing<>(4);
+		
+		for(int i = 0; i < 4; i++) {
+			currentInputRing.set(i, stateMatrix.getRowSum(i, Matrix.boolOr));
+		}
+		
+		return getPatternMatrix(currentInputRing);
+		
+	}
+	
 	// I/O patters is used for checking connectivity with other blocks
 	public Matrix<Boolean> getInputPattern() {
 		
@@ -263,8 +310,6 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		return patternMatrix;
 		
 	}
-	
-	
 	
 	public Matrix<Boolean> getOutputPattern() {
 		
@@ -366,6 +411,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		if( 0 <= stateNum && stateNum < maxState) {
 			this.stateNum = stateNum;
 			stateMatrix = stateList.get(stateNum);
+			System.out.println(stateMatrix);
 		}
 		else {
 			System.out.println("Cannot set state : state index out of bounds");

@@ -143,7 +143,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 	}
 	
 	public void changeState() {
-		System.out.println("changingStae");
+		System.out.println("changingState");
 		for(BuildingBlock block : values()) {
 			
 			block.setState( (block.currentStateNumber() + 1) %  block.maxState);

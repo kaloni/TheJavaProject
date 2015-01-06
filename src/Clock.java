@@ -43,6 +43,10 @@ public class Clock {
 		
 	}
 	
+	public void reset() {
+		time = 0;
+	}
+	
 	public void setSwitchTime(int switchTime) {
 		this.switchTime = switchTime;
 	}

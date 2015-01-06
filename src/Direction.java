@@ -34,6 +34,19 @@ public class Direction {
 		return bendedDir;
 	}
 	
+	public static Pos posBend(Pos pos, int bend) {
+		
+		Pos bendPos = new Pos(0,0);
+		int x = pos.x;
+		int y = pos.y;
+		
+		bendPos.x = - y*bend;
+		bendPos.y = x*bend;
+		
+		return bendPos;
+		
+	}
+	
 	public static int posToDir(Pos pos) {
 		// if WEST-EAST binding : x --> 1 - x
 		// if NORTH-SOUTH binding : x --> x % 4

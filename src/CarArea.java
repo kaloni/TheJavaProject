@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /*
  * Class that keeps track on when to produce new cars
@@ -12,17 +13,21 @@ public class CarArea {
 
 	private Pos pos;
 	private int[] color;
-	private HashMap<CarArea, Long> intervalMap;
+	private HashMap<CarArea, Long> destinationMap;
 	private HashMap<Long, Long> clock;
 	private CarSimulator parent;
 	
-	public CarArea(Pos pos, int[] color) {
+	public CarArea(Pos pos) {
 		
 		this.parent = parent;
 		this.pos = pos;
 		this.color = color;
-		intervalMap = new HashMap<>();
+		destinationMap = new HashMap<>();
 		clock = new HashMap<>();
+		color = new int[3];
+		for(int i = 0; i < color.length; i++) {
+			color[i] = 0;
+		}
 		
 	}
 	
@@ -40,13 +45,26 @@ public class CarArea {
 	public void setPos(Pos pos) {
 		this.pos = pos;
 	}
+	public void setColor(int[] color) {
+		
+		this.color = new int[color.length];
+		
+		for(int i = 0; i < color.length; i++) {
+			this.color[i] = color[i];
+		}
+		
+	}
 	
-	public Long getTimeInterval(CarArea dest) {
-		return intervalMap.get(dest);
+	public Long getDestinationTimeInterval(CarArea dest) {
+		return destinationMap.get(dest);
+	}
+	
+	public Set<CarArea> destinationSet() {
+		return destinationMap.keySet();
 	}
 	
 	public void mapAreaToInterval(CarArea area, Long interval) {
-		intervalMap.put(area, interval);
+		destinationMap.put(area, interval);
 		clock.put(interval, interval);
 		
 	}
@@ -60,7 +78,7 @@ public class CarArea {
 				// reset clock
 				clock.put(intervalCountdown.getKey(), intervalCountdown.getKey());
 				// check if to produce
-				for(Map.Entry<CarArea, Long> areaEntry : intervalMap.entrySet()) {
+				for(Map.Entry<CarArea, Long> areaEntry : destinationMap.entrySet()) {
 					if( areaEntry.getValue().equals( intervalCountdown.getKey()) ) {
 						// create car from this to dest = areaEntry.getKey()
 						parent.produceCar(this, areaEntry.getKey());

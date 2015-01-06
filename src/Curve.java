@@ -11,10 +11,10 @@ public class Curve extends BuildingBlock {
 		Matrix<Boolean> stateMatrixGreenLight = new Matrix<>(4,4,false);
 		stateMatrixGreenLight.set(Direction.antiDir(dir), Direction.dirBend(dir, bend), true);
 		
+		addState(stateMatrixGreenLight);
 		if(redLight) {
 			addState(stateMatrixRedLight);
 		}
-		addState(stateMatrixGreenLight);
 		
 	}
 	

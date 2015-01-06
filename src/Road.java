@@ -13,10 +13,10 @@ public class Road extends BuildingBlock {
 		Matrix<Boolean> stateMatrixGreenLight = new Matrix<>(4,4,false);
 		stateMatrixGreenLight.set(Direction.antiDir(dir), dir, true);
 		
+		addState(stateMatrixGreenLight);
 		if(redLight) {
 			addState(stateMatrixRedLight);
 		}
-		addState(stateMatrixGreenLight);
 		
 	}
 	
