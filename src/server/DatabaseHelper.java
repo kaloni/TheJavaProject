@@ -21,12 +21,20 @@ public class DatabaseHelper {
         return !password.isEmpty() && password.compareTo(value) == 0;
     }
 
-    public static void signUp(String username, String password) throws IOException {
+    public static boolean signUp(String username, String password) throws IOException {
         Options options = new Options();
         options.createIfMissing(true);
         DB db = factory.open(new File("database"), options);
+
+        String value = asString(db.get(bytes(username)));
+
+        if (!value.isEmpty()) { //user already registered
+            return false;
+        }
+
         db.put(bytes(username), bytes(password));
         db.close();
+        return true;
     }
 
     private static String asString(byte[] bytes) {

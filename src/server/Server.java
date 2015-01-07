@@ -3,6 +3,7 @@ package server;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import processing.data.JSONObject;
 import sun.net.www.protocol.http.HttpURLConnection;
 import util.Parser;
 
@@ -46,12 +47,12 @@ public class Server {
 
                     if (query.containsKey("username") && query.containsKey("password")) {
                         if (DatabaseHelper.loginSuccessful(query.get("username"), query.get("password") )) {
-                            response = "Login: OK";
+                            response = new JSONObject().setString("response", "OK").toString();
                         } else {
-                            response = "Login: Failed";
+                            response = new JSONObject().setString("response", "failed").setString("reason","password was invalid").toString();
                         }
                     } else {
-                        response = "Missing params";
+                        response = new JSONObject().setString("response", "failed").setString("reason","missing params").toString();
                     }
 
                     httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes().length);
@@ -82,11 +83,13 @@ public class Server {
                     String response;
 
                     if (query.containsKey("username") && query.containsKey("password")) {
-                        DatabaseHelper.signUp(query.get("username"), query.get("password"));
-                        response = "Sign Up: OK";
-                        //todo sign up processing. record the username & password to a file
+                        if (DatabaseHelper.signUp(query.get("username"), query.get("password"))) {
+                            response = new JSONObject().setString("response", "OK").toString();
+                        } else {
+                            response = new JSONObject().setString("response", "failed").setString("reason", "user already registered!").toString();
+                        }
                     } else {
-                        response = "Missing params";
+                        response = new JSONObject().setString("response", "failed").setString("reason", "missing params").toString();
                     }
 
                     httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes().length);
