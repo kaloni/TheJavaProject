@@ -1,10 +1,12 @@
 import processing.core.PVector;
 import server.Server;
+import util.Network;
 import view.GameMenuView;
 import view.LoginForm;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class Main extends JFrame {
 
@@ -88,15 +90,28 @@ public class Main extends JFrame {
         LoginForm loginForm = new LoginForm();
         loginForm.setLoginListener(new LoginForm.LoginListener() {
             @Override
-            public void login(boolean loginSuccessful) {
+            public void login(String username, boolean loginSuccessful, String serverIP, int serverPort) {
                 if (loginSuccessful) {
-                    loginForm.dispose();
-                    GameMenuView gameMenuView = new GameMenuView();
+
+					// put fake data in database
+					try {
+						Network.sendUserScoreToServer("Barack Obama", "110", serverIP, serverPort);
+						Network.sendUserScoreToServer("John Doe", "20", serverIP, serverPort);
+						Network.sendUserScoreToServer("Arielle", "120", serverIP, serverPort);
+						Network.sendUserScoreToServer("Carl Dehlin", "150", serverIP, serverPort);
+					} catch (URISyntaxException | IOException e) {
+						e.printStackTrace();
+					}
+
+					loginForm.dispose();
+                    GameMenuView gameMenuView = new GameMenuView(username, serverIP, serverPort);
                     gameMenuView.setVisible(true);
                 }
             }
         });
         loginForm.setVisible(true);
+
+
 
     }
 }

@@ -1,16 +1,27 @@
 package view;
 
+import util.Network;
 import util.ViewUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class GameMenuView extends JFrame {
+    private String username;
+    private String serverIP;
+    private int serverPort;
 
-    public GameMenuView() {
+    public GameMenuView(String username, String serverIP, int serverPort) {
         super();
+
+        this.username = username;
+        this.serverIP = serverIP;
+        this.serverPort = serverPort;
+
         this.setTitle("GameMenuView");
         this.setVisible(false);
         this.setLayout(null);
@@ -54,7 +65,16 @@ public class GameMenuView extends JFrame {
     private final ActionListener leaderBoardActionPerformed = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            try {
+                String scoresJson = Network.getAllScoresFromServer(serverIP, serverPort);
 
+
+
+                LeaderboardView leaderboardView = new LeaderboardView(scoresJson);
+                leaderboardView.setVisible(true);
+            } catch (URISyntaxException | IOException e1) {
+                e1.printStackTrace();
+            }
         }
     };
     private final ActionListener exitGameActionPerformed = new AbstractAction() {
