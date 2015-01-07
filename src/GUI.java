@@ -220,7 +220,7 @@ public class GUI extends PApplet {
 		// run mode
 		
 		area1 = new CarArea(new Pos(10,5));
-		area2 = new CarArea(new Pos(5,10));
+		area2 = new CarArea(new Pos(12,7));
 		area3 = new CarArea(new Pos(15,10));
 		area4 = new CarArea(new Pos(10,15));
 		
@@ -396,7 +396,6 @@ public class GUI extends PApplet {
 							
 							Long randomSpawnTime = new Long((int) random(3000));
 							carArea.mapAreaToInterval(otherCarArea, randomSpawnTime);
-							System.out.println(randomSpawnTime);
 							
 						}
 						
@@ -496,7 +495,7 @@ public class GUI extends PApplet {
 	public void drawCar(PVector mapPos) {
 		
 		ellipse(blockScale*(mapPos.x + 0.5f), blockScale*(mapPos.y + 0.5f), carSize, carSize);
-		
+		//ellipse(blockScale*(mapPos.x), blockScale*(mapPos.y), carSize, carSize);
 	}
 	
 	public void drawRunButton() {
@@ -887,7 +886,7 @@ public class GUI extends PApplet {
 			System.out.println(currentFocus.getBlock().getOutputPattern());
 		}
 		if( key == 'i' ) {
-			System.out.println(currentFocus.getBlock().getInputPattern());
+			System.out.println(currentFocus.getBlock().getCurrentInputPattern());
 		}
 		// if pressing anything except SHIFT, TAB or D makes all focus disappear
 		if( keyCode != SHIFT && keyCode != TAB && keyCode != UP && key != 'd' && key != 'r' && key != 'f' && key != 'v' && key != ' ') {
