@@ -10,6 +10,8 @@ import java.util.Random;
 
 import javax.swing.JFrame;
 
+import processing.core.PVector;
+
 import com.google.common.collect.HashBiMap;
 
 
@@ -81,9 +83,13 @@ public class Main extends JFrame {
 			System.out.println(biMap.get(i));
 		}
 		*/
+		BlockMap<Pos, BlockGroup> blockMap = new BlockMap<>();
+		GUI gui = new GUI();
+		CarSimulator sim = new CarSimulator(blockMap, gui);
 		
-		List<Integer> list1 = new ArrayList();
-		List<Integer> list2 = new ArrayList();
+		PVector dir1 = new PVector(1,1);
+		PVector dir2 = new PVector(1.00001f, 1.00001f);
+		System.out.println(sim.parallell(dir1, dir2));
 		
 	}
 	

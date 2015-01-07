@@ -137,6 +137,28 @@ public class PathFinder {
 		return null;
 	}
 	
+	public List<Pos> minPath(List<List<Pos>> pathList) {
+		
+		List<Pos> minPath = null;
+		Integer minPathLength = null;
+		
+		for(List<Pos> path : pathList) {
+			
+			if( minPath == null ) {
+				minPath = path;
+				minPathLength = path.size();
+			}
+			else {
+				minPath = (path.size() < minPathLength) ? path : minPath;
+				minPathLength = minPath.size();
+			}
+				
+		}
+		
+		return minPath;
+		
+	}
+	
 	// need to set return type of Matrx.getRow as Object[]
 	// and then convert to Double[] using Arrays
 	// this might be solved by using java reflection

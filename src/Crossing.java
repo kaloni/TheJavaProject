@@ -38,6 +38,21 @@ public class Crossing extends BuildingBlock {
 	}
 	
 	@Override
+	public void revert() {
+		
+		for( Matrix<Boolean> stateMatrix : stateList ) {
+			stateMatrix.shift();
+			stateMatrix.shift();
+		}
+		
+		connectionMatrix.transpose();
+		updateRing();
+		dir = Direction.antiDir(dir);
+		reverted = !reverted;
+		
+	}
+	
+	@Override
 	public Crossing clone() {
 		
 		Crossing crossingClone = new Crossing(dir, bend, redLight, gui);

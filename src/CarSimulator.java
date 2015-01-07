@@ -50,17 +50,49 @@ public class CarSimulator {
 		
 	}
 	
+	float directionThreshold = 0.1f;
+	public boolean parallell(PVector dir1, PVector dir2) {
+		
+		float deltaX;
+		float deltaY;
+		
+		if( dir2.x != 0 ) {
+			deltaX = dir1.x/dir2.x;
+		}
+		else if( dir1.x == 0 ) {
+			deltaX = 0;
+		}
+		else {
+			return false;
+		}
+		
+		if( dir2.y != 0 ) {
+			deltaY= dir1.y/dir2.y;
+		}
+		else if( dir1.y == 0 ) {
+			deltaY = 0;
+		}
+		else {
+			return false;
+		}
+		
+		return Math.abs(deltaX - deltaY) < directionThreshold;
+		
+	}
 	// checks if a PVector is "in front" of another, according to the direction of the first
 	public boolean hasInfrontOf(PVector myPos, PVector myDir, PVector infrontPos) {
 	
 		if( myDir.x != 0 && myDir.y != 0 ) {
-			return sameSign(infrontPos.x - myPos.x, myDir.x) && sameSign(infrontPos.y - myPos.y, myDir.y);
+			//System.out.println(parallell(PVector.sub(infrontPos, myPos), myDir));
+			return sameSign(infrontPos.x - myPos.x, myDir.x) && sameSign(infrontPos.y - myPos.y, myDir.y)
+					&& parallell(PVector.sub(infrontPos, myPos), myDir);
+				//	&& sameSign( (infrontPos.x - myPos.x)/(infrontPos.y - myPos.y), myDir.x/myDir.y );
 		}
 		else if( myDir.x == 0 ) {
-			return sameSign(infrontPos.y - myPos.y, myDir.y);
+			return sameSign(infrontPos.y - myPos.y, myDir.y) && (infrontPos.x - myPos.x == 0f);
 		}
 		else if( myDir.y == 0) {
-			return sameSign(infrontPos.x - myPos.x, myDir.x);
+			return sameSign(infrontPos.x - myPos.x, myDir.x) && (infrontPos.y - myPos.y == 0f);
 		}
 		return false;
 	}
@@ -77,14 +109,18 @@ public class CarSimulator {
 	// args[1] = pos dir
 	// args[2] = pos to check
 	// this checks is a pos is in front or to the right (and in front)
-	public static TrafficRule<Pos, Boolean> RIGHT_FIRST_RULE = args -> 
-		args[0].add(args[1]).equals(args[2]);
-		/*
-		||
+	public static TrafficRule<Pos, Boolean> RIGHT_FIRST_RULE = args ->
+		//args[0].add(args[1]).equals(args[2]);
+		//||
 		args[0].add(args[1]).add(Direction.posBend(args[1], Direction.RIGHT)).equals(args[2]) 
 		&& args[1].equals(Direction.posBend(args[3], Direction.RIGHT));
-		*/
 		
+		
+	//public static TrafficRule<Pos, Boolean> LEFT_WAIT_RULE = args ->
+	
+		//args[0].add(args[1]).add(Direction.posBend(args[1], Direction.LEFT)).equals(args[2]) {
+	
+	
 	// checks if it's ok to enter a block according to it's current allowed directions
 	// args[0] is a possible direction in a block
 	// args[1] is the car's possible direction
@@ -115,20 +151,32 @@ public class CarSimulator {
 		Pos dirPos = thisCar.dir();
 		PVector floatDir = new PVector(dirPos.x, dirPos.y);
 		float minimumDistance = thisCar.minimumDistance();
+		float checkDistance = thisCar.checkDistance();
 		
 		for(Car car : carList) {
 			
 			if( car != thisCar ) {
 				
 				PVector diffPos = PVector.sub(car.floatPos(), currentFloatPos);
-				
-				if( diffPos.mag() < minimumDistance ) {
-					// TODO : check traffick rule bug
-					System.out.println(diffPos.mag());
+				 
+				// check if cars around according to traffic rules
+				if( diffPos.mag() < checkDistance ) {
+					
+					// TODO : check traffic rule bug
+					//System.out.println(diffPos.mag());
+					if( checkRule(RIGHT_FIRST_RULE, thisCar.pos(), dirPos, car.pos(), car.dir()) ) {
+						return true;
+					}
+					// if car infront to close
+					else if( diffPos.mag() < minimumDistance ) {
+						return hasInfrontOf(currentFloatPos, floatDir, car.floatPos());
+					}
+					//return  hasInfrontOf(currentFloatPos, floatDir, car.floatPos()) || checkRule(RIGHT_FIRST_RULE, thisCar.pos(), dirPos, car.pos(), car.dir());
+					/*
 					if( checkRule(RIGHT_FIRST_RULE, thisCar.pos(), dirPos, car.pos(), car.dir()) ) {
 						return hasInfrontOf(currentFloatPos, floatDir, car.floatPos());
 					}
-
+					*/
 				}
 			
 			}
@@ -175,19 +223,49 @@ public class CarSimulator {
 	
 	public void produceCar(CarArea source, CarArea dest) {
 		
-		List<Pos> carPath = pathFinder.toPath( pathFinder.shortestPath(source.pos()), dest.pos() );
+		//List<Pos> carPath = pathFinder.toPath( pathFinder.shortestPath(source.pos()), dest.pos() );
+		List<Pos> carPath = null;
+		List<List<Pos>> carPathList = new ArrayList<>();
+		Pos sourcePos = source.pos();
+		BuildingBlock sourceBlock = blockMap.get(sourcePos);
+		// create List of possible paths to check which is the shortest
+		for(int i = -1; i <= 1; i++) {
+			for(int j = -1; j <= 1; j++) {
+				
+				Pos neighborPos = source.pos().add(new Pos(i,j));
+				// if conneced
+				if( blockMap.get(neighborPos) != null ) {
+					if( sourceBlock.checkConnect(neighborPos.sub(sourcePos), blockMap.get(neighborPos)) ) {
+						
+						carPath = pathFinder.getPath(source.pos().add(new Pos(i,j)), dest.pos());
+						if( carPath != null ) {
+							carPathList.add(carPath);
+						}
+					}
+				}
+			}
+		}
+		
+		carPath = pathFinder.minPath(carPathList);
+		//System.out.println(carPath);
+		
+		Car car = new Car(carPath, this, gui);
 		
 		boolean areaJammed = false;
-		for(Car car : carList) {
+		for(Car otherCar : carList) {
 			
-			if( car.pos().equals(carPath.get(0)) ) {
-				areaJammed = true;
-				break;
+			if( otherCar.pos().equals(carPath.get(0)) ) {
+				
+				if( PVector.dist(otherCar.floatPos(), car.floatPos()) < car.minimumDistance() ) {
+				
+					areaJammed = true;
+					break;
+				
+				}
 			}
 			
 		}
 		if( ! areaJammed ) {
-			Car car = new Car(carPath, this, gui);
 			carList.add(car);
 		}
 		

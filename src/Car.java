@@ -12,6 +12,7 @@ public class Car {
 	private PVector floatPos;
 	private int speed;
 	private float minimumDistance;
+	private float checkDistance;
 	private GUI gui;
 	private CarSimulator simulator;
 	public static final float deltaPos = 0.001f;
@@ -29,7 +30,8 @@ public class Car {
 		floatPos = new PVector(pos.x, pos.y);
 		
 		// defaults
-		minimumDistance = 0.9f;
+		minimumDistance = 0.25f;
+		checkDistance = 0.5f;
 		
 	}
 	
@@ -53,6 +55,9 @@ public class Car {
 	}
 	public float minimumDistance() {
 		return minimumDistance;
+	}
+	public float checkDistance() {
+		return checkDistance;
 	}
 	
 	public void setSpeed(int speed) {
@@ -80,7 +85,10 @@ public class Car {
 		// such that "closeness" cannot be detected
 		//if( floatPosToIntPos(floatPos).equals(nextPos) ) {
 		boolean greenLight = simulator.greenLight(dir(), nextPos);
-		if( floatPos.dist(new PVector(nextPos.x, nextPos.y)) < roundDist) {
+		float distToRedLight =  PVector.dist(floatPos, new PVector(nextPos.x, nextPos.y));
+		//System.out.println(distToRedLight);
+		if( PVector.dist(floatPos, new PVector(nextPos.x, nextPos.y)) < roundDist) {
+			
 			// if green light
 			if( greenLight ) {
 				// if reached destination
@@ -101,10 +109,12 @@ public class Car {
 			
 		}
 		// if clear path, drive
-		if( greenLight && ! simulator.carInfront(this) ) {
-			
-			floatPos.x = floatPos.x + passedTime*deltaPos*(nextPos.x - pos.x);
-			floatPos.y = floatPos.y + passedTime*deltaPos*(nextPos.y - pos.y);
+		if( ! simulator.carInfront(this) ) {
+			// adding 0.5 because of gui reasons
+			if( greenLight || ( ! greenLight && distToRedLight > (roundDist + 0.5f) )) {
+				floatPos.x = floatPos.x + passedTime*deltaPos*(nextPos.x - pos.x);
+				floatPos.y = floatPos.y + passedTime*deltaPos*(nextPos.y - pos.y);
+			}
 			
 		}
 		// draw this car in gui
