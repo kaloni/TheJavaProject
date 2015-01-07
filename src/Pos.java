@@ -163,6 +163,10 @@ public class Pos implements Comparable<Pos> {
 		rotateJump = i;
 	}
 	
+	public void setOnX(boolean bool) {
+		onX = bool;
+	}
+	
 	/*
 	public void setOrigin(Pos origin) {
 		this.origin = origin;
@@ -203,6 +207,7 @@ public class Pos implements Comparable<Pos> {
 	}
 	*/
 	
+	
 	public void rotateWithCheck() {
 		
 		if( alternate ) {
@@ -220,6 +225,24 @@ public class Pos implements Comparable<Pos> {
 		}
 		else {
 			rotate();
+		}
+		
+	}
+	
+	public void rotate(int dir) {
+		
+		int rotationMax = 8;
+		dir = dir % rotationMax;
+		
+		if( dir > 0) {
+			for(int i = 0; i < dir;  i++) {
+				rotate();
+			}
+		}
+		else if( dir < 0 ) {
+			for(int i = 0; i < rotationMax + dir; i++) {
+				rotate();
+			}
 		}
 		
 	}
@@ -279,6 +302,11 @@ public class Pos implements Comparable<Pos> {
 		
 	}
 	
+	public void translate(int x, int y) {
+		this.x = this.x + x;
+		this.y = this.y + y;
+	}
+	
 	public Pos add(Pos pos) {
 		
 		int newX = x + pos.x;
@@ -291,6 +319,20 @@ public class Pos implements Comparable<Pos> {
 		int newX = x - pos.x;
 		int newY = y - pos.y;
 		return new Pos(newX,newY);
+	}
+	
+	public static double dist(Pos pos1, Pos pos2) {
+		
+		Pos posDiff = pos1.sub(pos2);
+		
+		return Math.sqrt(posDiff.x*posDiff.x + posDiff.y*posDiff.y);
+		
+	}
+	
+	public double abs() {
+		
+		return Math.sqrt(x*x + y*y);
+		
 	}
 	
 	

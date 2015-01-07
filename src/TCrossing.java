@@ -3,6 +3,7 @@ public class TCrossing extends BuildingBlock {
 
 	private int bend;
 	private boolean fork;
+	private boolean reverted;
 	
 	public TCrossing(int dirRoad, int curveBend, boolean fork,  boolean redLight, GUI gui) {
 		
@@ -22,9 +23,10 @@ public class TCrossing extends BuildingBlock {
 			curve.revert();
 		}
 		
+		// removeState(0), when the redLight order is reversed in road and curve
 		if( redLight ) {
-			road.removeState(0);
-			curve.removeState(0);
+			road.removeState(1);
+			curve.removeState(1);
 			tempT_crossing = blockSum(road,curve);
 		}
 		else {
@@ -38,6 +40,10 @@ public class TCrossing extends BuildingBlock {
 		this.redLight = redLight;
 		this.fork = fork;
 		
+	}
+	
+	public void setReverted(boolean reverted) {
+		this.reverted = reverted;
 	}
 	
 	@Override
@@ -57,10 +63,21 @@ public class TCrossing extends BuildingBlock {
 	}
 	
 	@Override
+	public void revert() {
+		
+		super.revert();
+		reverted = !reverted;
+		fork = !fork;
+		bend = -bend;
+		
+	}
+	
+	@Override
 	public TCrossing clone() {
 		
 		TCrossing TCrossingClone = new TCrossing(dir, bend, fork, redLight, gui);
 		TCrossingClone.setDiagonal(diagonal);
+		TCrossingClone.setReverted(reverted);
 		
 		for(Matrix<Boolean> stateMatrix : stateList) {
 			

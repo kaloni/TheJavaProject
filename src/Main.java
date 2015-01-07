@@ -1,11 +1,19 @@
 import server.Server;
 import view.LoginForm;
 
+import java.awt.BorderLayout;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
+import javax.swing.JFrame;
 
-public class Main {
+import com.google.common.collect.HashBiMap;
+
+
+public class Main extends JFrame {
 	
 	/*
 	 * Use Main for testing
@@ -16,56 +24,7 @@ public class Main {
 	public static void main(String[] args) {
 		
 		
-		int rows = 4;
-		int cols = 4;
-		
-		Boolean[][] tempBool = new Boolean[rows][cols];
-		Boolean[][] tempBool2 = new Boolean[cols][rows];
-		Integer[][] tempIntArray = new Integer[rows][cols];
-		Integer[][] tempInt2Array = new Integer[cols][rows];
-		Integer[][] symIntArray = new Integer[rows][rows];
-		Integer[][] symIntArray2 = new Integer[rows][rows];
-		Boolean[][] symBoolArray = new Boolean[rows][rows];
-		Boolean[][] symBoolArray2 = new Boolean[rows][rows];
-		for(int i = 0; i < rows; i++) {
-			for(int j = 0; j < cols; j++) {
-				int tempInt = new Random().nextInt(10);
-				int tempInt2 = new Random().nextInt(10);
-				int tempBoolint = new Random().nextInt(2);
-				int tempBoolint2 = new Random().nextInt(2);
-				tempIntArray[i][j] = tempInt;
-				tempInt2Array[j][i] = tempInt2;
-				tempBool[i][j] = ( tempBoolint == 0 );
-				tempBool2[j][i] = ( tempBoolint2 == 0 );
-			}
-			for(int k = 0; k < rows; k++) {
-				int tempInt = new Random().nextInt(10);
-				int tempInt2 = new Random().nextInt(10);
-				int tempBoolint = new Random().nextInt(2);
-				int tempBoolint2 = new Random().nextInt(2);
-				symIntArray[i][k] = tempInt;
-				symIntArray2[i][k] = tempInt2;
-				symBoolArray[i][k] = ( tempBoolint == 0 );
-				symBoolArray2[i][k] = ( tempBoolint2 == 0 );
-			}
-		}
-		
-		
-		Matrix<Boolean> matrix1 =  new Matrix<>(tempBool);
-		Matrix<Boolean> matrix2 =  new Matrix<>(tempBool2);
-		Matrix<Boolean> multMatrix = matrix1.matrixMult(matrix2, Matrix.boolOr, Matrix.boolAnd);
-		Matrix<Integer> intMatrix1 = new Matrix<>(tempIntArray);
-		Matrix<Integer> intMatrix2 = new Matrix<>(tempInt2Array);
-		Matrix<Integer> intMultMatrix = intMatrix1.matrixMult(intMatrix2, Matrix.intAdd, Matrix.intMult);
-		//Matrix<Boolean> opMatrix = matrix1.directOp(matrix2, Matrix.boolOr);
-		
-		Matrix<Integer> symIntMatrix1 = new Matrix<>(symIntArray);
-		Matrix<Integer> symIntMatrix2 = new Matrix<>(symIntArray2);
-		Matrix<Integer> intOpMatrix = symIntMatrix1.directOp(symIntMatrix2, Matrix.intAdd);
-		Matrix<Boolean> symBoolMatrix1 = new Matrix<>(symBoolArray);
-		Matrix<Boolean> symBoolMatrix2 = new Matrix<>(symBoolArray2);
-		Matrix<Boolean> boolOpMatrix = symBoolMatrix1.directOp(symBoolMatrix2, Matrix.boolOr);
-
+		/*
 		Server server;
 		try {
 			server = new Server();
@@ -76,9 +35,57 @@ public class Main {
 
 		LoginForm loginForm = new LoginForm();
 		loginForm.setVisible(true);
-
+		 */
 		
+		/*
+		GUI gui = new GUI();
+		BuildingBlock road = new Road(3, true, gui);
+		BuildingBlock curve = new Curve(0, -1,  true, gui);
+		
+		for(int i = -1; i <= 1; i++) {
+			for(int j = -1; j <= 1; j++) {
+				boolean connected = curve.checkConnect(new Pos(i, j), road);
+				System.out.println(connected + " at " + i + " " + j);
+			}
+		}
+		*/
+		
+		/*
+		GUI gui = new GUI();
+		BlockMap<Pos, BlockGroup> blockMap = new BlockMap<>();
+		BlockGroup.initGroups(gui, blockMap);
+		
+		BlockGroup road = BlockGroup.newLongRoad(1, 1, true);
+		BlockGroup curve = BlockGroup.newCurve(1, true);
+		blockMap.put(new Pos(0,0), road);
+		blockMap.put(new Pos(1,0), curve);
+		
+		PathFinder pathFinder = new PathFinder(blockMap);
+		Matrix<Double> matrix = Matrix.getRandomMatrix(4,10);
+		Integer[] previous = pathFinder.shortestPath(matrix, 1);
+		
+		System.out.println(matrix);
+		for(int i = 0; i < previous.length; i++) {
+			System.out.print(previous[i] + " ");
+		}
+		*/
+		
+		/*
+		Map<Integer, Pos> biMap = HashBiMap.create();
+		biMap.put(0, new Pos(0, 0));
+		biMap.put(1, new Pos(0, 1));
+		biMap.put(2, new Pos(1, 0));
+		biMap.put(3, new Pos(1, 1));
+		
+		for(int i = 0; i < 4; i++) {
+			System.out.println(biMap.get(i));
+		}
+		*/
+		
+		List<Integer> list1 = new ArrayList();
+		List<Integer> list2 = new ArrayList();
 		
 	}
+	
 
 }

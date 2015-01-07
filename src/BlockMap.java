@@ -105,5 +105,9 @@ public class BlockMap<K,V> extends HashMap<K, V> {
 		return dummyValue;
 	}
 	
+	public void removeDummy() {
+		this.remove(dummyKey);
+	}
+	
 	
 }
