@@ -30,7 +30,35 @@ public class CarSimulator {
 	}
 	
 	public boolean hasPath(Pos from, Pos to) {
-		return pathFinder.hasPath(from, to);
+		
+		Pos sourcePos;
+		Pos destPos;
+		boolean hasPath = false;
+		
+		for(int i = -1; i <= 1; i++) {
+			for(int j = -1; j <= 1; j++) {
+				
+				sourcePos = from.clone();
+				sourcePos = sourcePos.add(new Pos(i,j));
+				
+				for(int n = -1; n <= 1; n++) {
+					for(int k = -1; k <= 1; k++) {
+					
+						destPos = to.clone();
+						destPos = destPos.add(new Pos(n,k));
+						
+						hasPath = hasPath || pathFinder.hasPath(sourcePos, destPos);
+						if( hasPath ) {
+							System.out.println("Have path : " + sourcePos + " ---> " + destPos);
+							return true;
+						}
+						
+					}
+				}
+				
+			}
+		}
+		return false;
 	}
 	
 	// checks if two floats have the same sign
@@ -189,8 +217,9 @@ public class CarSimulator {
 	
 	public void addCarArea(CarArea carArea) {
 		
-		areaList.add(carArea);
-		
+		if( !areaList.contains(carArea) ) {
+			areaList.add(carArea);
+		}
 	}
 	
 	public void simulate() {
@@ -227,26 +256,67 @@ public class CarSimulator {
 		List<Pos> carPath = null;
 		List<List<Pos>> carPathList = new ArrayList<>();
 		Pos sourcePos = source.pos();
-		BuildingBlock sourceBlock = blockMap.get(sourcePos);
+		Pos destPos = dest.pos();
+		Pos sourceNeighborPos;
+		Pos destNeighborPos;
+		
 		// create List of possible paths to check which is the shortest
 		for(int i = -1; i <= 1; i++) {
 			for(int j = -1; j <= 1; j++) {
 				
-				Pos neighborPos = source.pos().add(new Pos(i,j));
-				// if conneced
-				if( blockMap.get(neighborPos) != null ) {
-					if( sourceBlock.checkConnect(neighborPos.sub(sourcePos), blockMap.get(neighborPos)) ) {
+				if( !( i == 0 && j == 0) ) {
+					
+					sourceNeighborPos = sourcePos.add(new Pos(i,j));
+					
+					if( blockMap.get(sourceNeighborPos) != null ) {
+							
+						//System.out.println("sourceBlock " + sourcePos + " have neighbor at " + sourceNeighborPos);
 						
-						carPath = pathFinder.getPath(source.pos().add(new Pos(i,j)), dest.pos());
-						if( carPath != null ) {
-							carPathList.add(carPath);
+						for(int n = -1; n <= 1; n++) {
+							for(int k = -1; k <= 1; k++) {
+								
+								if( !( n == 0 && k == 0) ) {
+									
+									destNeighborPos = destPos.add(new Pos(n,k));
+									BuildingBlock destNeighborBlock = blockMap.get(destNeighborPos);
+									
+									if( destNeighborBlock != null ) {
+										
+										if( destNeighborBlock.hasOutputConnection(destPos.sub(destNeighborPos)) ) {
+											
+											//System.out.println("destBlock " + destPos + " have neighbor at " + destNeighborPos);
+											
+											carPath = pathFinder.getPath(sourceNeighborPos, destNeighborPos);
+											
+											if( carPath != null ) {
+												carPathList.add(carPath);
+											}
+											
+										}
+										
+										
+									}
+									
+								}
+								
+							}
 						}
+						
+						//if( sourceBlock.checkConnect(neighborPos.sub(sourcePos), blockMap.get(neighborPos)) ) {
+						//if( neighborBlock.checkConnect(neighborPos.sub(sourcePos), blockMap.get(neighborPos)) ) {
+							
+							//carPath = pathFinder.getPath(source.pos().add(new Pos(i,j)), dest.pos());
+						
+						//}
 					}
+				
 				}
 			}
 		}
 		
 		carPath = pathFinder.minPath(carPathList);
+		// add the end destination
+		carPath.add(destPos);
 		//System.out.println(carPath);
 		
 		Car car = new Car(carPath, this, gui);

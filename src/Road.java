@@ -8,6 +8,7 @@ public class Road extends BuildingBlock {
 		
 		super(dir, gui);
 		this.redLight = redLight;
+		cost = 30;
 		
 		Matrix<Boolean> stateMatrixRedLight = new Matrix<>(4,4,false);
 		Matrix<Boolean> stateMatrixGreenLight = new Matrix<>(4,4,false);

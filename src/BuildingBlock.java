@@ -21,6 +21,7 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 	protected boolean redLight;
 	protected boolean diagonal;
 	protected Pos groupOrigin;
+	protected int cost;
 	
 	List<BuildingBlock> connectionList;
 	
@@ -174,6 +175,10 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		
 		this.groupOrigin = groupOrigin;
 		
+	}
+	
+	public int cost() {
+		return diagonal ? 7*cost/5 : cost;
 	}
 	
 	// this is only to ensure that one can call display on an arbitrary BuildingBlock
@@ -341,6 +346,19 @@ class BuildingBlock implements Comparable<BuildingBlock> {
 		}
 		
 		return patternMatrix;
+		
+	}
+	
+	public boolean hasOutputConnection(Pos pos) {
+		
+		Pos matrixPos = pos.clone();
+		matrixPos.translate(1, 1);
+		Matrix<Boolean> outputPattern = getOutputPattern();
+		
+		if( outputPattern.get(matrixPos.y, matrixPos.x) ) {
+			return true;
+		}
+		return false;
 		
 	}
 	

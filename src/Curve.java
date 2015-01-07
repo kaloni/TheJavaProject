@@ -6,6 +6,7 @@ public class Curve extends BuildingBlock {
 		super(dir, gui);
 		this.gui = gui;
 		this.bend = bend;
+		cost = 30;
 		
 		Matrix<Boolean> stateMatrixRedLight = new Matrix<>(4,4,false);
 		Matrix<Boolean> stateMatrixGreenLight = new Matrix<>(4,4,false);
@@ -17,6 +18,7 @@ public class Curve extends BuildingBlock {
 		}
 		
 	}
+	
 	
 	public void setReverted(boolean reverted) {
 		this.reverted = reverted;

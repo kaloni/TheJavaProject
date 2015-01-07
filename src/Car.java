@@ -84,7 +84,9 @@ public class Car {
 		// The number 0.01f is arbitrary set to make the animation look smooth but not to small
 		// such that "closeness" cannot be detected
 		//if( floatPosToIntPos(floatPos).equals(nextPos) ) {
-		boolean greenLight = simulator.greenLight(dir(), nextPos);
+		
+		// if destination reached, there's no block there (only car area), so greenlight = true
+		boolean greenLight = nextPos.equals(endPos) ? true :  simulator.greenLight(dir(), nextPos);
 		float distToRedLight =  PVector.dist(floatPos, new PVector(nextPos.x, nextPos.y));
 		//System.out.println(distToRedLight);
 		if( PVector.dist(floatPos, new PVector(nextPos.x, nextPos.y)) < roundDist) {

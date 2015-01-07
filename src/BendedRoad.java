@@ -6,9 +6,13 @@ public class BendedRoad extends Curve {
 	public BendedRoad(int dir, int bend, boolean redLight, GUI gui) {
 		
 		super(dir, bend, redLight, gui);
-		
+		cost = 40;
 	}
 	
+	@Override
+	public int cost() {
+		return cost;
+	}
 	
 	@Override
 	public Matrix<Boolean> getOutputPattern() {

@@ -6,6 +6,7 @@ public class Crossing extends BuildingBlock {
 		this.gui = gui;
 		this.dir = dir;
 		this.bend = bend;
+		cost = 50;
 		
 		BuildingBlock tempCrossing;
 		BuildingBlock tempFuse1;

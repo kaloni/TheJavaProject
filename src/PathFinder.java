@@ -115,6 +115,8 @@ public class PathFinder {
 	
 	public boolean hasPath(Pos from, Pos to) {
 		
+		//System.out.println("From : " + from + " " + indexMap.containsValue(from) + " ||| To : " + to + " " + indexMap.containsValue(to) );
+		
 		Integer[] recursePath = shortestPath(from);
 		// if the start and end block exists
 		if( recursePath != null && indexMap.containsValue(to) ) {

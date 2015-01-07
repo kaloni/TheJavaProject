@@ -8,6 +8,7 @@ public class TCrossing extends BuildingBlock {
 	public TCrossing(int dirRoad, int curveBend, boolean fork,  boolean redLight, GUI gui) {
 		
 		this.gui = gui;
+		cost = 40;
 		
 		BuildingBlock tempT_crossing;
 		BuildingBlock curve;

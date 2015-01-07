@@ -125,11 +125,17 @@ public class GUI extends PApplet {
 	private final long runModePrecision = 100;
 	private float carSize = 5;
 	boolean allAreasConnected;
+	List<Pair<CarArea>> nonConnectedAreaList;
+	float animationCounter;
+	float animationPrec;
 	CarArea area1;
 	CarArea area2;
 	CarArea area3;
 	CarArea area4;
 	
+	// Game parameters
+	private int money;
+	private int startMoney;
 	///////// ////////// ///////////
 	
 	// TODO : implement the panel
@@ -229,12 +235,34 @@ public class GUI extends PApplet {
 		//carAreaMap.put(area3.pos(), area4);
 		//carAreaMap.put(area4.pos(), area4);
 		
+		nonConnectedAreaList = new ArrayList<>();
+		animationCounter = 0f;
+		animationPrec = 0.01f;
+		
 		for(CarArea carArea : carAreaMap.values()) {
 			
 			int[] randomColor = {(int)random(255), (int)random(255), (int) random(255)};
 			carArea.setColor(randomColor);
+			blockMap.addCarAreaPos(carArea.pos());
+			
+			for(CarArea otherCarArea : carAreaMap.values()) {
+				
+				if( carArea != otherCarArea ) {
+					
+					Long randomSpawnTime = new Long((int) random(3000));
+					carArea.mapAreaToInterval(otherCarArea, randomSpawnTime);
+					
+				}
+				
+			}
 			
 		}
+		
+		// game
+		startMoney = 2000;
+		money = 2000;
+		
+		
 		
 	}
 	
@@ -383,19 +411,33 @@ public class GUI extends PApplet {
 			
 			if( runSetup ) {
 				
+				animationCounter = 0f;
+				nonConnectedAreaList.clear();
 				carSimulator = new CarSimulator(blockMap, this);
 				
 				for(CarArea carArea : carAreaMap.values()) {
 					
 					carArea.setParent(carSimulator);
 					carSimulator.addCarArea(carArea);
-					
-					for(CarArea otherCarArea : carAreaMap.values()) {
-						
-						if( carArea != otherCarArea ) {
 							
-							Long randomSpawnTime = new Long((int) random(3000));
-							carArea.mapAreaToInterval(otherCarArea, randomSpawnTime);
+				}
+				
+				// check if everything is connected
+				allAreasConnected = true;
+				System.out.println(carAreaMap.size());
+				//pathBreak:
+				for(CarArea source : carAreaMap.values() ) {
+					
+					for(CarArea dest : source.destinationSet()) {
+						
+						//System.out.println("sourcePos = " + source.pos() + " : destPos = " + dest.pos());
+						
+						if( ! carSimulator.hasPath(source.pos(), dest.pos()) ) {
+							
+							nonConnectedAreaList.add(Pair.of(source, dest));
+							System.out.println("noPath");
+							//resetClocks();
+							//break pathBreak;
 							
 						}
 						
@@ -406,24 +448,9 @@ public class GUI extends PApplet {
 				time = System.currentTimeMillis();
 				runSetup = false;
 				
-				// check if everything is connected
-				allAreasConnected = true;
-				pathBreak:
-				for(CarArea source : carAreaMap.values() ) {
-					
-					for(CarArea dest : source.destinationSet()) {
-						
-						if( ! carSimulator.hasPath(source.pos(), dest.pos()) ) {
-							System.out.println("noPath");
-							allAreasConnected = false;
-							runMode = false;
-							resetClocks();
-							break pathBreak;
-							
-						}
-						
-					}
-					
+				if( nonConnectedAreaList.size() != 0 ) {
+					allAreasConnected = false;
+					runMode = false;
 				}
 					
 
@@ -435,6 +462,42 @@ public class GUI extends PApplet {
 			
 		}
 		
+		if( !allAreasConnected ) {
+			
+			animationCounter += (animationCounter >= 1f) ? 0 : animationPrec;
+			
+			for( Pair<CarArea> areaPair : nonConnectedAreaList ) {
+				
+				drawNonConnectedAreaArrow(areaPair.first.pos(), areaPair.second.pos(), areaPair.first.color());
+				
+			}
+		}
+		
+	}
+	
+	public void drawNonConnectedAreaArrow(Pos from, Pos to, int[] color) {
+		
+		PVector posCenter = new PVector(blockScale*to.x, blockScale*from.y);
+		PVector toTemp = new PVector(blockScale*to.x, blockScale*to.y);
+		PVector fromTemp = new PVector(blockScale*from.x, blockScale*from.y);
+		PVector toDelta = PVector.sub(toTemp, posCenter);
+		PVector fromDelta = PVector.sub(fromTemp, posCenter);
+		
+		toTemp = PVector.add(posCenter , PVector.mult(fromDelta, cos(PI*animationCounter/2)));
+		toTemp = PVector.add(toTemp, PVector.mult(toDelta, sin(PI*animationCounter/2)));
+		
+		translate(blockScale/2, blockScale/2);
+		strokeWeight(3);
+		stroke(color[0], color[1], color[2]);
+		noFill();
+		curve(posCenter.x, posCenter.y, fromTemp.x, fromTemp.y, toTemp.x, toTemp.y, posCenter.x, posCenter.y);
+		strokeWeight(1);
+		noStroke();
+		translate(- blockScale/2, - blockScale/2);
+	}
+	
+	public int score() {
+		return 0;
 	}
 	
 	public Pos getPos(BlockGroup block) {
@@ -915,11 +978,20 @@ public class GUI extends PApplet {
 			numKey = Character.getNumericValue(key);
 		}
 		*/
-		
+		BlockGroup tempFocus;
 		// instantiators
 		switch(key) {
 		case('q'):
 			newFocus = BlockGroup.newLongRoad(numKey, Direction.EAST, true);
+			/*
+			if( tempFocus.cost() <= money ) {
+				System.out.println(tempFocus.cost() + "<=" + money);
+				newFocus = tempFocus;
+			}
+			else {
+				System.out.println("not enough money");
+			}
+			*/
 			break;
 		case('l'):
 			newFocus = BlockGroup.newLaneRoad(numKey, Direction.EAST, true);
@@ -994,6 +1066,9 @@ public class GUI extends PApplet {
 						
 						mapSet.remove(focusEntry);
 						focusEntry.getValue().removeFromNeighbors();
+						int moneyTemp = money;
+						money = money + focusEntry.getValue().cost();
+						System.out.println("money : " + money + " = " + moneyTemp + " + " + focusEntry.getValue().cost());
 						
 					}
 					currentFocus = null;
@@ -1228,55 +1303,66 @@ public class GUI extends PApplet {
 		
 		if( newFocus != null) {
 	
-			Pos mousePos = XYtoPos(mouseX, mouseY);
-			if( blockMap.put(mousePos, newFocus) != null ) {
+			if( newFocus.cost() <= money ) {
 				
-				if( keyPressed && keyCode == SHIFT ) {
+				Pos mousePos = XYtoPos(mouseX, mouseY);
+				if( blockMap.put(mousePos, newFocus) != null ) {
 					
-					// Add neighbors (with SHIFT pressed)
-					Pos posFocus = blockMap.getKey(newFocus);
-					int focusX = posFocus.x;
-					int focusY = posFocus.y;
-					for(int x = focusX - 1; x <= focusX + 1; x++) {
-						for(int y = focusY - 1; y <= focusY + 1; y++) {
-							
-							BlockGroup blockNeighbor = blockMap.get(new Pos(x,y));
+					int moneyTemp = money;
+					money = money - newFocus.cost();
+					System.out.println("money : " + money + " = " + moneyTemp + " - " + newFocus.cost());
+					
+					if( keyPressed && keyCode == SHIFT ) {
+						
+						// Add neighbors (with SHIFT pressed)
+						Pos posFocus = blockMap.getKey(newFocus);
+						int focusX = posFocus.x;
+						int focusY = posFocus.y;
+						for(int x = focusX - 1; x <= focusX + 1; x++) {
+							for(int y = focusY - 1; y <= focusY + 1; y++) {
 								
-							if( !(x == focusX && y == focusY) && blockNeighbor != null) {
-								newFocus.addNeighbor(new Pos(x - focusX, y - focusY), blockNeighbor);
-								blockNeighbor.addNeighbor(new Pos(focusX - x, focusY - y), newFocus);
+								BlockGroup blockNeighbor = blockMap.get(new Pos(x,y));
+									
+								if( !(x == focusX && y == focusY) && blockNeighbor != null) {
+									newFocus.addNeighbor(new Pos(x - focusX, y - focusY), blockNeighbor);
+									blockNeighbor.addNeighbor(new Pos(focusX - x, focusY - y), newFocus);
+								}
+								
 							}
-							
 						}
+						
+						newFocus = newFocus.clone();
+						
+					}
+					else {
+						
+						currentFocus = newFocus;
+						focusMap.put(mousePos,currentFocus);
+						newFocus = null;
+						// Add neighbors
+						Pos posFocus = blockMap.getKey(currentFocus);
+						int focusX = posFocus.x;
+						int focusY = posFocus.y;
+						for(int x = focusX - 1; x <= focusX + 1; x++) {
+							for(int y = focusY - 1; y <= focusY + 1; y++) {
+								
+								BlockGroup blockNeighbor = blockMap.get(new Pos(x,y));
+									
+								if( !(x == focusX && y == focusY) && blockNeighbor != null) {
+									currentFocus.addNeighbor(new Pos(x - focusX, y - focusY), blockNeighbor);
+									blockNeighbor.addNeighbor(new Pos(focusX - x, focusY - y), currentFocus);
+								}
+								
+							}
+						}
+						
 					}
 					
-					newFocus = newFocus.clone();
-					
 				}
-				else {
-					
-					currentFocus = newFocus;
-					focusMap.put(mousePos,currentFocus);
-					newFocus = null;
-					// Add neighbors
-					Pos posFocus = blockMap.getKey(currentFocus);
-					int focusX = posFocus.x;
-					int focusY = posFocus.y;
-					for(int x = focusX - 1; x <= focusX + 1; x++) {
-						for(int y = focusY - 1; y <= focusY + 1; y++) {
-							
-							BlockGroup blockNeighbor = blockMap.get(new Pos(x,y));
-								
-							if( !(x == focusX && y == focusY) && blockNeighbor != null) {
-								currentFocus.addNeighbor(new Pos(x - focusX, y - focusY), blockNeighbor);
-								blockNeighbor.addNeighbor(new Pos(focusX - x, focusY - y), currentFocus);
-							}
-							
-						}
-					}
-					
-				}
-				
+			
+			}
+			else {
+				System.out.println("Not enough money");
 			}
 			
 		}

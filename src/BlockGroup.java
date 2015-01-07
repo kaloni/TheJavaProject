@@ -19,6 +19,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 	private int speedLimit;
 	private boolean focused;
 	private Pos origin;
+	private int cost;
 
 	private HashMap<Pos, BlockGroup> neighborMap;
 	private List<BlockGroup> blockLinkList;
@@ -48,6 +49,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		origin = new Pos(0,0);
 		blockLinkList = new ArrayList<>();
 		neighborMap = new BlockMap<Pos, BlockGroup>();
+		cost = block.cost();
 		
 	}
 	
@@ -58,6 +60,21 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 	}
 	
 	////////// ////////// //////////
+	
+	public int cost() {
+		
+		int cost = 0;
+		
+		for(BuildingBlock block : this.values()) {
+			cost = cost + block.cost();
+		}
+		
+		return cost;
+		
+	}
+	public void setCost(int cost) {
+		this.cost = cost;
+	}
 	
 	public int groupAxis() {
 		return groupAxis;
@@ -304,14 +321,18 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		
 		BlockGroup roadGroup = new BlockGroup(dir);
 		Pos tempPos;
+		int cost = 0;
 		
 		for(int i = 0; i < length; i++) {
 			
 			tempPos = new Pos(i,0);
 			tempPos.setRotationBounds(-i,i,-i,i);
-			roadGroup.put(tempPos, new Road(dir, redLight, gui));
-			
+			Road newRoad = new Road(dir, redLight, gui);
+			roadGroup.put(tempPos, newRoad);
+			cost = cost + newRoad.cost();
 		}
+		
+		roadGroup.setCost(cost);
 		
 		return roadGroup;
 		
@@ -321,14 +342,18 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		
 		BlockGroup roadGroup = new BlockGroup(dir);
 		BlockGroup tempGroup;
+		int cost = 0;
 		
 		for(int i = 0; i < lanes; i++) {
 			
 			tempGroup = newLongRoad(lanes, dir, redLight);
 			tempGroup.translateOrigin(new Pos(0,i));
 			roadGroup = BlockGroup.groupFuse(roadGroup, tempGroup);
+			cost = cost + tempGroup.cost();
 			
 		}
+		
+		roadGroup.setCost(cost);
 		
 		return roadGroup;
 		
@@ -341,6 +366,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		BuildingBlock tempBlock;
 		Pos tempPos;
 		int rotationDistance;
+		int cost = 0;
 		
 		for(int i = 0; i < lanes; i++) {
 			for(int j = 0; j < lanes; j++) {
@@ -368,9 +394,12 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 				tempPos.setRotationBounds(- rotationDistance, rotationDistance, - rotationDistance, rotationDistance);
 				roadGroup.put(tempPos, tempBlock);
 				
+				cost = cost + tempBlock.cost();
+				
 			}
-			
 		}
+		
+		roadGroup.setCost(cost);
 		
 		return roadGroup;
 		
@@ -382,6 +411,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		BuildingBlock tempBlock;
 		Pos tempPos;
 		int rotationDistance;
+		int cost = 0;
 		
 		for(int i = 0; i < size; i++) {
 			for(int j = 0; j < size; j++) {
@@ -411,9 +441,12 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 				
 				tempPos.setRotationBounds(- rotationDistance, rotationDistance, - rotationDistance, rotationDistance);
 				curveGroup.put(tempPos, tempBlock);
+				cost = cost + tempBlock.cost();
 				
 			}
 		}
+		
+		curveGroup.setCost(cost);
 		
 		return curveGroup;
 		
@@ -424,6 +457,7 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 		BlockGroup bendedRoadGroup = new BlockGroup(dir);
 		BuildingBlock tempBlock;
 		Pos tempPos;
+		int cost = 0;
 		
 		for(int i = 0; i < size; i++) {
 			for(int j = i; j < size; j++) {
@@ -432,10 +466,13 @@ public class BlockGroup extends BlockMap<Pos,BuildingBlock> {
 				tempPos = new Pos(i,j);
 				
 				bendedRoadGroup.put(tempPos, tempBlock);
+				cost = cost + tempBlock.cost();
 				System.out.println(tempPos);
 				
 			}
 		}
+		
+		bendedRoadGroup.setCost(cost);
 		
 		return bendedRoadGroup;
 		
