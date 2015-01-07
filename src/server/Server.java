@@ -3,12 +3,11 @@ package server;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import processing.data.JSONObject;
 import sun.net.www.protocol.http.HttpURLConnection;
 import util.Parser;
 
-import org.iq80.leveldb.*;
-import static org.iq80.leveldb.impl.Iq80DBFactory.*;
-import java.io.*;
+import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -25,6 +24,8 @@ public class Server {
         server = HttpServer.create(new InetSocketAddress(DEFAULT_SERVER_PORT), 0);
         server.createContext("/login", new LoginHandler());
         server.createContext("/signup", new SignUpHandler());
+        server.createContext("/submitScore", new SubmitScoreHandler());
+        server.createContext("/getScores", new GetScoresHandler());
         server.setExecutor(Executors.newCachedThreadPool());
     }
 
@@ -45,13 +46,13 @@ public class Server {
                     String response;
 
                     if (query.containsKey("username") && query.containsKey("password")) {
-                        if (DatabaseHelper.loginSuccessful(query.get("username"), query.get("password") )) {
-                            response = "Login: OK";
+                        if (DatabaseHelper.loginSuccessful(query.get("username"), query.get("password"))) {
+                            response = new JSONObject().setString("response", "OK").toString();
                         } else {
-                            response = "Login: Failed";
+                            response = new JSONObject().setString("response", "failed").setString("reason", "password was invalid").toString();
                         }
                     } else {
-                        response = "Missing params";
+                        response = new JSONObject().setString("response", "failed").setString("reason", "missing params").toString();
                     }
 
                     httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes().length);
@@ -82,11 +83,50 @@ public class Server {
                     String response;
 
                     if (query.containsKey("username") && query.containsKey("password")) {
-                        DatabaseHelper.signUp(query.get("username"), query.get("password"));
-                        response = "Sign Up: OK";
-                        //todo sign up processing. record the username & password to a file
+                        if (DatabaseHelper.signUp(query.get("username"), query.get("password"))) {
+                            response = new JSONObject().setString("response", "OK").toString();
+                        } else {
+                            response = new JSONObject().setString("response", "failed").setString("reason", "user already registered!").toString();
+                        }
                     } else {
-                        response = "Missing params";
+                        response = new JSONObject().setString("response", "failed").setString("reason", "missing params").toString();
+                    }
+
+                    httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes().length);
+                    responseBody.write(response.getBytes());
+
+                } else {
+                    httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 1);
+                }
+
+                responseBody.close();
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+
+    static class SubmitScoreHandler implements HttpHandler {
+        public void handle(HttpExchange httpExchange) throws IOException {
+
+            String requestMethod = httpExchange.getRequestMethod();
+            try {
+                OutputStream responseBody = httpExchange.getResponseBody();
+
+                if (requestMethod.equalsIgnoreCase("GET")) {
+                    Map<String, String> query = Parser.splitQuery(httpExchange.getRequestURI().getRawQuery());
+                    String response;
+
+                    if (query.containsKey("username") && query.containsKey("score")) {
+                        if (DatabaseHelper.submitScore(query.get("username"), query.get("score"))) {
+                            response = new JSONObject().setString("response", "OK").toString();
+                        } else {
+                            response = new JSONObject().setString("response", "failed").setString("reason", "failed to submit score!").toString();
+                        }
+                    } else {
+                        response = new JSONObject().setString("response", "failed").setString("reason", "missing params").toString();
                     }
 
                     httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes().length);
@@ -105,6 +145,19 @@ public class Server {
         }
     }
 
+    static class GetScoresHandler implements HttpHandler {
+        public void handle(HttpExchange httpExchange) throws IOException {
+            try {
+                OutputStream responseBody = httpExchange.getResponseBody();
+                String response = DatabaseHelper.getAllScoreAsJsonString();
+                httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes().length);
+                responseBody.write(response.getBytes());
+                responseBody.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
 //    static class MyHandler implements HttpHandler {
 //        public void handle(HttpExchange httpExchange) throws IOException {
 //

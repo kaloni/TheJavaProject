@@ -225,15 +225,15 @@ public class GUI extends PApplet {
 		
 		// run mode
 		
-		area1 = new CarArea(new Pos(10,5));
-		area2 = new CarArea(new Pos(12,7));
-		area3 = new CarArea(new Pos(15,10));
+		area1 = new CarArea(new Pos(10,10));
+		area2 = new CarArea(new Pos(15,10));
+		area3 = new CarArea(new Pos(15,15));
 		area4 = new CarArea(new Pos(10,15));
 		
 		carAreaMap.put(area1.pos(), area1);
 		carAreaMap.put(area2.pos(), area2);
-		//carAreaMap.put(area3.pos(), area4);
-		//carAreaMap.put(area4.pos(), area4);
+		carAreaMap.put(area3.pos(), area4);
+		carAreaMap.put(area4.pos(), area4);
 		
 		nonConnectedAreaList = new ArrayList<>();
 		animationCounter = 0f;
@@ -245,6 +245,7 @@ public class GUI extends PApplet {
 			carArea.setColor(randomColor);
 			blockMap.addCarAreaPos(carArea.pos());
 			
+			int innerCounter = 0;
 			for(CarArea otherCarArea : carAreaMap.values()) {
 				
 				if( carArea != otherCarArea ) {
@@ -261,8 +262,6 @@ public class GUI extends PApplet {
 		// game
 		startMoney = 2000;
 		money = 2000;
-		
-		
 		
 	}
 	
