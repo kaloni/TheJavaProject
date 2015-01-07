@@ -79,7 +79,6 @@ public class LoginForm extends JFrame {
                 7, 7);       //xPad, yPad
         this.setContentPane(panel);
         this.pack();
-        this.setVisible(false);
 
         // center the form
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -149,10 +148,10 @@ public class LoginForm extends JFrame {
                         }
 
                         if (loginListener != null) {
-                            loginListener.login(loginSuccessfully);
+                            loginListener.login(usernameField.getText(), loginSuccessfully, serverIpField.getText(), Integer.valueOf(serverPortField.getText()));
                         }
                     } catch (URISyntaxException | IOException e1) {
-                        loginListener.login(false);
+                        loginListener.login(usernameField.getText(), false, serverPortField.getText(), Integer.valueOf(serverPortField.getText()));
                         e1.printStackTrace();
                     }
 
@@ -208,7 +207,6 @@ public class LoginForm extends JFrame {
             t.start();
 
             showProgressDialog("Signing up...");
-
         }
     };
 
@@ -218,7 +216,7 @@ public class LoginForm extends JFrame {
 
 
     public interface LoginListener {
-        void login(boolean loginSuccessful);
+        void login(String username, boolean loginSuccessful, String serverIP, int serverPort);
     }
 }
 

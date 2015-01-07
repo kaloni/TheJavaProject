@@ -37,8 +37,50 @@ public class DatabaseHelper {
         return true;
     }
 
+    public static boolean submitScore(String username, String score) throws IOException {
+        Options options = new Options();
+        options.createIfMissing(true);
+        DB db = factory.open(new File("database"), options);
+
+        String value = asString(db.get(bytes("scores")));
+
+        org.json.JSONObject scoreJSON;
+        if (!value.isEmpty()) { //user score
+            scoreJSON = new org.json.JSONObject(value);
+        } else {
+            scoreJSON = new org.json.JSONObject();
+        }
+
+        scoreJSON.put(username, score);
+
+        System.out.println("All Scores: \n" + scoreJSON.toString());
+
+        db.put(bytes("scores"), bytes(scoreJSON.toString()));
+        db.close();
+        return true;
+    }
+
+    public static String getAllScoreAsJsonString() throws IOException {
+        Options options = new Options();
+        options.createIfMissing(true);
+        DB db = factory.open(new File("database"), options);
+
+        String value = asString(db.get(bytes("scores")));
+        db.close();
+        org.json.JSONObject scoreJSON;
+        if (!value.isEmpty()) { //user score
+            scoreJSON = new org.json.JSONObject(value);
+        } else {
+            scoreJSON = new org.json.JSONObject();
+        }
+
+        System.out.println("All Scores: \n" + scoreJSON.toString());
+
+        return scoreJSON.toString();
+    }
+
     private static String asString(byte[] bytes) {
-        if (bytes!=null) {
+        if (bytes != null) {
             return new String(bytes);
         } else {
             return "";
