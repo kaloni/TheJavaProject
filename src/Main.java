@@ -1,33 +1,24 @@
+import processing.core.PVector;
 import server.Server;
+import view.GameMenuView;
 import view.LoginForm;
 
-import java.awt.BorderLayout;
+import javax.swing.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import javax.swing.JFrame;
-
-import processing.core.PVector;
-
-import com.google.common.collect.HashBiMap;
-
 
 public class Main extends JFrame {
-	
-	/*
-	 * Use Main for testing
-	 */
-	
-	Matrix<Integer> matrix;
 
-	public static void main(String[] args) {
-		
+	/*
+     * Use Main for testing
+	 */
+
+    Matrix<Integer> matrix;
+
+    public static void main(String[] args) throws IOException {
+
 		
 		/*
-		Server server;
+        Server server;
 		try {
 			server = new Server();
 			server.start();
@@ -83,15 +74,29 @@ public class Main extends JFrame {
 			System.out.println(biMap.get(i));
 		}
 		*/
-		BlockMap<Pos, BlockGroup> blockMap = new BlockMap<>();
-		GUI gui = new GUI();
-		CarSimulator sim = new CarSimulator(blockMap, gui);
-		
-		PVector dir1 = new PVector(1,1);
-		PVector dir2 = new PVector(1.00001f, 1.00001f);
-		System.out.println(sim.parallell(dir1, dir2));
-		
-	}
-	
+        BlockMap<Pos, BlockGroup> blockMap = new BlockMap<>();
+        GUI gui = new GUI();
+        CarSimulator sim = new CarSimulator(blockMap, gui);
 
+        PVector dir1 = new PVector(1, 1);
+        PVector dir2 = new PVector(1.00001f, 1.00001f);
+        System.out.println(sim.parallell(dir1, dir2));
+
+        Server server = new Server();
+        server.start();
+
+        LoginForm loginForm = new LoginForm();
+        loginForm.setLoginListener(new LoginForm.LoginListener() {
+            @Override
+            public void login(boolean loginSuccessful) {
+                if (loginSuccessful) {
+                    loginForm.dispose();
+                    GameMenuView gameMenuView = new GameMenuView();
+                    gameMenuView.setVisible(true);
+                }
+            }
+        });
+        loginForm.setVisible(true);
+
+    }
 }
