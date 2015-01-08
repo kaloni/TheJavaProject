@@ -58,7 +58,10 @@ public class GameMenuView extends JFrame {
     private final ActionListener startGameActionPerformed = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-
+        	/*
+        	GUI gui = new GUI();
+        	gui.start();
+        	*/
         }
     };
 

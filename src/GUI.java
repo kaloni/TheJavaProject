@@ -1,6 +1,7 @@
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -128,10 +129,19 @@ public class GUI extends PApplet {
 	List<Pair<CarArea>> nonConnectedAreaList;
 	float animationCounter;
 	float animationPrec;
+	float flowAnimationCounter;
+	float flowAnimationPrec;
 	CarArea area1;
 	CarArea area2;
 	CarArea area3;
 	CarArea area4;
+	boolean drawNonConnect;
+	boolean loseFlag;
+	boolean metaLoseFlag;
+	boolean winFlag;
+	long loseTime;
+	long runModeTime;
+	long messageTime = 3000; // millis
 	
 	// Game parameters
 	private int money;
@@ -227,17 +237,20 @@ public class GUI extends PApplet {
 		
 		area1 = new CarArea(new Pos(10,10));
 		area2 = new CarArea(new Pos(15,10));
-		area3 = new CarArea(new Pos(15,15));
+		area3 = new CarArea(new Pos(12,12));
 		area4 = new CarArea(new Pos(10,15));
 		
 		carAreaMap.put(area1.pos(), area1);
 		carAreaMap.put(area2.pos(), area2);
-		carAreaMap.put(area3.pos(), area4);
+		carAreaMap.put(area3.pos(), area3);
 		carAreaMap.put(area4.pos(), area4);
 		
 		nonConnectedAreaList = new ArrayList<>();
 		animationCounter = 0f;
 		animationPrec = 0.01f;
+		flowAnimationCounter = 0f;
+		flowAnimationPrec = 0.01f;
+		drawNonConnect = true;
 		
 		for(CarArea carArea : carAreaMap.values()) {
 			
@@ -245,12 +258,11 @@ public class GUI extends PApplet {
 			carArea.setColor(randomColor);
 			blockMap.addCarAreaPos(carArea.pos());
 			
-			int innerCounter = 0;
 			for(CarArea otherCarArea : carAreaMap.values()) {
 				
-				if( carArea != otherCarArea ) {
+				if( otherCarArea != carArea ) {
 					
-					Long randomSpawnTime = new Long((int) random(3000));
+					Long randomSpawnTime = new Long((int) random(1000, 3000));
 					carArea.mapAreaToInterval(otherCarArea, randomSpawnTime);
 					
 				}
@@ -264,6 +276,8 @@ public class GUI extends PApplet {
 		money = 2000;
 		
 	}
+	
+	
 	
 	public void draw() {
 		
@@ -405,14 +419,23 @@ public class GUI extends PApplet {
 		}
 		
 		drawRunButton();
+		drawMoney();
+		drawFlowArrows();
 		
 		if( runMode ) {
 			
 			if( runSetup ) {
-				
+
+				runModeTime = System.currentTimeMillis();
+				loseFlag = false;
+				metaLoseFlag = false;
+				winFlag = false;
+				drawNonConnect = true;
 				animationCounter = 0f;
 				nonConnectedAreaList.clear();
+				resetClocks();
 				carSimulator = new CarSimulator(blockMap, this);
+				carSimulator.setEndTime(10000);
 				
 				for(CarArea carArea : carAreaMap.values()) {
 					
@@ -423,18 +446,15 @@ public class GUI extends PApplet {
 				
 				// check if everything is connected
 				allAreasConnected = true;
-				System.out.println(carAreaMap.size());
 				//pathBreak:
 				for(CarArea source : carAreaMap.values() ) {
 					
 					for(CarArea dest : source.destinationSet()) {
-						
 						//System.out.println("sourcePos = " + source.pos() + " : destPos = " + dest.pos());
 						
 						if( ! carSimulator.hasPath(source.pos(), dest.pos()) ) {
 							
 							nonConnectedAreaList.add(Pair.of(source, dest));
-							System.out.println("noPath");
 							//resetClocks();
 							//break pathBreak;
 							
@@ -450,18 +470,53 @@ public class GUI extends PApplet {
 				if( nonConnectedAreaList.size() != 0 ) {
 					allAreasConnected = false;
 					runMode = false;
+					System.out.println("noPath");
 				}
 					
 
 			}
 			
 			if( allAreasConnected ) {
+				
 				carSimulator.simulate();
+				drawTimer();
+				
 			}
+			
+			if( loseFlag ) {
+				
+				if( System.currentTimeMillis() - loseTime < messageTime ) {
+					textSize(3*blockScale);
+					fill(255, 255, 51);
+					text("Traffic Jam!", width/2 - 7*blockScale, height/2 - 3*blockScale);
+				}
+				else {
+					
+					runMode = false;
+					loseFlag = false;
+					metaLoseFlag = false;
+					
+				}
+				
+			}
+			if( winFlag ) {
+				
+				textSize(3*blockScale);
+				fill(51, 153, 255);
+				text("Won!", width/2 - 3*blockScale, height/2 - 3*blockScale);
+				
+			}
+			
 			
 		}
 		
-		if( !allAreasConnected ) {
+		if( !allAreasConnected && drawNonConnect ) {
+			
+			if( nonConnectedAreaList.size() != 0 && System.currentTimeMillis() - runModeTime < messageTime) {
+				textSize(2*blockScale);
+				fill(204, 0, 102);
+				text("Not all areas connected!", width/2 - 10*blockScale, height/2 - 3*blockScale);
+			}
 			
 			animationCounter += (animationCounter >= 1f) ? 0 : animationPrec;
 			
@@ -470,6 +525,84 @@ public class GUI extends PApplet {
 				drawNonConnectedAreaArrow(areaPair.first.pos(), areaPair.second.pos(), areaPair.first.color());
 				
 			}
+		}
+		
+	}
+	
+	public void drawTimer() {
+		
+		translate(width/2, blockScale*2);
+		noFill();
+		stroke(255);
+		ellipse(0, 0, 2*blockScale, 2*blockScale);
+		
+		drawArrow(0, 0, blockScale*sin(2*PI*carSimulator.currentTime()/carSimulator.endTime()), - blockScale*cos(2*PI*carSimulator.currentTime()/carSimulator.endTime()));
+		
+		noStroke();
+		translate(- width/2, - blockScale*2);
+		
+	}
+	
+	public void trafficJam() {
+		
+		loseFlag = true;
+		if( metaLoseFlag == false ) {
+			loseTime = System.currentTimeMillis();
+			System.out.println("lost");
+		}
+		metaLoseFlag = true;
+		
+	}
+	public void win() {
+		
+		if( ! loseFlag ) {
+			
+			winFlag = true;
+			System.out.println("won");
+			
+		}
+		
+	}
+	
+	public void drawMoney() {
+		
+		if( ! editMode ) {
+			
+			fill(204, 204, 0);
+			ellipse(blockScale/2, blockScale/2, blockScale/3, blockScale/3);
+			fill(0,0,0);
+			textSize(blockScale);
+			text(Integer.toString(money), blockScale, blockScale);
+			
+		}
+		
+	}
+	public void drawFlowArrows() {
+		
+			
+		CarArea carArea = carAreaMap.get(mousePos);
+		if( carArea != null ) {
+			Pos from = carArea.pos();
+			stroke(carArea.color()[0], carArea.color()[1], carArea.color()[2]);
+			strokeWeight(3);
+			translate(blockScale*(mousePos.x + 0.5f), blockScale*(mousePos.y + 0.5f));
+				
+			for(CarArea otherCarArea : carAreaMap.get(mousePos).destinationSet()) {
+					
+				Pos to = otherCarArea.pos();
+				line(0, 0, blockScale*flowAnimationCounter*(to.x - from.x), blockScale*flowAnimationCounter*(to.y - from.y));
+				
+			}
+			
+			flowAnimationCounter += (flowAnimationCounter >= 1f) ? 0 : flowAnimationPrec;
+			translate(- blockScale*(mousePos.x + 0.5f), - blockScale*(mousePos.y + 0.5f));
+			noStroke();
+			strokeWeight(1);
+			
+			
+		}
+		else {
+			flowAnimationCounter = 0f;
 		}
 		
 	}
@@ -938,6 +1071,10 @@ public class GUI extends PApplet {
 	public void buildKeyPressed() {
 		// p test key
 		if( key == 'p') {
+			drawNonConnect = false;
+			loseFlag = false;
+			runMode = false;
+			runSetup = true;
 			if( currentFocus != null) {
 				System.out.println(currentFocus.getBlock().connections());
 				//System.out.println(currentFocus.getBlock().getInputPattern());

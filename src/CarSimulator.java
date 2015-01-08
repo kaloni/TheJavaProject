@@ -15,7 +15,9 @@ public class CarSimulator {
 	private PathFinder pathFinder;
 	private GUI gui;
 	private long time;
+	private long startTime;
 	private long passedTime;
+	private long endTime;
 	
 	public CarSimulator(BlockMap<Pos, BlockGroup> blockMap, GUI gui) {
 		
@@ -26,6 +28,7 @@ public class CarSimulator {
 		carList = new ArrayList<>();
 		carToRemove = new ArrayList<>();
 		time = System.currentTimeMillis();
+		startTime = time;
 		
 	}
 	
@@ -222,11 +225,26 @@ public class CarSimulator {
 		}
 	}
 	
+	public long currentTime() {
+		return System.currentTimeMillis() - startTime;
+	}
+	
+	public long endTime() {
+		return endTime;
+	}
+	
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
+	
 	public void simulate() {
 		
 		passedTime = System.currentTimeMillis() - time;
 		time = System.currentTimeMillis();
 		
+		if( time - startTime >= endTime ) {
+			gui.win();
+		}
 		//for(Car car : carList) {
 		for(Iterator<Car> carIter = carList.iterator(); carIter.hasNext();) {
 			
@@ -247,6 +265,7 @@ public class CarSimulator {
 			area.produce(passedTime);
 			
 		}
+		
 		
 	}
 	
@@ -329,6 +348,7 @@ public class CarSimulator {
 				if( PVector.dist(otherCar.floatPos(), car.floatPos()) < car.minimumDistance() ) {
 				
 					areaJammed = true;
+					gui.trafficJam();
 					break;
 				
 				}

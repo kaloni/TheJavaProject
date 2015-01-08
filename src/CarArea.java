@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /*
@@ -30,6 +31,21 @@ public class CarArea {
 		}
 		
 	}
+	
+	/*
+	@Override
+	public int hashCode() {
+		return Objects.hash(pos.x,pos.y);
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if( !(o instanceof CarArea) ) {
+			return false;
+		}
+		return Objects.equals( ((CarArea) o).pos.x, pos.x) && Objects.equals( ((CarArea) o).pos.y, pos.y);
+	}
+	*/
 	
 	// this needs to be done after construcor because of practical reasons
 	public void setParent(CarSimulator parent) {
